@@ -10,11 +10,20 @@ from AD5391Task import AD5391
 setup_leds()
 
 # Initialize AD5391
-dac = AD5391()
+ad5391 = AD5391()
 
 def process_command(command):
     if command == "info":
         response = "This is a Basic 16 Channel Arbitrary Waveform Generator v0.01"
+    elif command == "read_mon_out":
+        mon_out_value = ad5391.read_mon_out()
+        response = f"MON_OUT value: {mon_out_value}"
+    elif command == "read_mon_out_voltage":
+        mon_out_voltage = ad5391.read_mon_out_voltage()
+        response = f"MON_OUT voltage: {mon_out_voltage:.4f} V"
+    elif command == "read_busy_pin":
+        busy_state = ad5391.read_busy_pin()
+        response = f"BUSY pin state (False Means Busy): {busy_state}"
     else:
         response = "Unknown command"
     return response
