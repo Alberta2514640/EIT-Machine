@@ -13,7 +13,27 @@ setup_leds()
 
 # Initialize AD5391
 ad5391 = AD5391()
-
+# Write DAC RAW Function (To Try and Activate the Internal Reference by setting the control register)
+# Writing Control Register
+# REG1=REG0=0
+# A3-A0 = 1100
+# DB13-DB0 Contains CR13 - CR0
+# This Setup gives the following
+# A/~B = 0
+# R/~W = 0
+# 00 (Always 0)
+# A3-A0 = 1100 (Control Register)
+# REG1-REG0 = 00 (Special Functions)
+# DB13 - DB12 = Doesn't apply to AD5391
+# CR11 = 1 Power Down Status. Configures the Amplifier Behavior in Power Down
+# CR10 = 0 REF Select (Sets the Internal Reference 1/2,5V 0/1.25V)
+# CR9 = 1 Current Boost Control (1 Maximizes the bias current to the output amplifier while in increasing power consumption)
+# CR8 = 1 Internal / External Reference (1 Uses Internal Reference)
+# CR7 = 1 Enable Channel Monitor Function (1 allows channels to be routed to the output)
+# CR6 = 0 Enable Thermal Monitor Function 
+# CR5-CR2 = Don't CARE
+# CR3-CR2 = Toggle Function Enable 
+ad5391.write_dac_raw(0b0_0_00_1100_00_101111_0000_00_00)
 sine_gen = SineWaveGenerator(channel=1, period=0.2, amplitude=1000, dac=ad5391)
 square_gen = SquareWaveGenerator(channel=0, period=1, amplitude=4095, dac=ad5391)
 
