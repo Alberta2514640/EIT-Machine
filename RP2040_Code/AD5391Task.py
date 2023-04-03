@@ -57,9 +57,24 @@ class AD5391:
     def set_ldac_pin(self, state):
         self.LDAC.value = state
 
-    def write_dac(self, channel, value, toggle_mode=False, ab_select=False, reg_select=0):
+#   Write a Value to the DAC (24 bit data word)
+#   24 bits are as follows
+#   ~A/B, R/~W, 0, 0, A3, A2, A1, A0 REG1, REG0, DB11, DB10, DB9, DB8, DB7, DB6, DB5, DB4, DB3, DB2, DB1, DB0, X, X
+#   ~A/B Toggle Mode, Determines if data is written to the A or B Register
+#   R/~W Read Write Control Bit
+#   A3- A0 Addresses the Input Channels
+#   REG 1 and REG 0 Which Register is Written to
+#   DB11 - DB0 Data being Written (Last 2 bits are don't cares because they are for other chips which are good to 14 bits. )
+    def write_dac(self, channel, value, toggle_mode=False, ab_select=False, reg_select=3):
+        # Asserts that the Channel Must be Between 0 and 15. Given this is a 16 channel DAC
         assert 0 <= channel <= 15, "Channel must be between 0 and 15"
+        # Asserts that the output value must be between 0 and 4095 
         assert 0 <= value <= 4095, "Value must be between 0 and 4095"
+        # Asserts that the register must be between 0 and 3 this must be given the values. 
+        # 3 input data Register
+        # 2 Offset Register 
+        # 1 Gain Register
+        # 0 Special Function Register
         assert 0 <= reg_select <= 3, "Register select must be between 0 and 3"
 
         ab_bit = 1 if toggle_mode and ab_select else 0
