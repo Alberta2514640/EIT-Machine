@@ -40,7 +40,7 @@ class AD5391:
         self.spi = busio.SPI(board.GP18, MISO=board.GP16, MOSI=board.GP19)
         while not self.spi.try_lock():
              pass
-        self.spi.configure(baudrate=100000)  # Set SPI clock speed to 50 MHz
+        self.spi.configure(baudrate=50000000)  # Set SPI clock speed to 50 MHz
         self.spi.unlock()
 
     #read MON_OUT value
