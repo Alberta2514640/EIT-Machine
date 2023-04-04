@@ -30,11 +30,11 @@ ad5391 = AD5391()
 # CR9 = 1 Current Boost Control (1 Maximizes the bias current to the output amplifier while in increasing power consumption)
 # CR8 = 1 Internal / External Reference (1 Uses Internal Reference)
 # CR7 = 1 Enable Channel Monitor Function (1 allows channels to be routed to the output)
-# CR6 = 0 Enable Thermal Monitor Function 
+# CR6 = 0 Enable Thermal Monitor Function
 # CR5-CR2 = Don't CARE
-# CR3-CR2 = Toggle Function Enable 
-ad5391.write_dac_raw(0b0_0_00_1100_00_101111_0000_00_00)
-sine_gen = SineWaveGenerator(channel=1, period=0.2, amplitude=1000, dac=ad5391)
+# CR1-CR0 = Toggle Function Enable
+
+sine_gen = SineWaveGenerator(channel=1, period=1, amplitude=4095, dac=ad5391)
 square_gen = SquareWaveGenerator(channel=0, period=1, amplitude=4095, dac=ad5391)
 
 def process_command(command):
@@ -76,7 +76,7 @@ def process_command(command):
     return response
 
 
-ad5391.monitor_channel(1)
+ad5391.monitor_channel(0)
 
 next_toggle = time.monotonic() + 1
 
@@ -85,7 +85,9 @@ while True:
     if now >= next_toggle:
         toggle_leds()
         next_toggle = now + 0.05
-        print((ad5391.read_mon_out_voltage(),))
+        control_register_value = ad5391.read_register(0b0001, 0b11)
+        ad5391.write_dac_raw(0b0_0_00_1100_00_101111_0000_00_00)
+        print(((control_register_value & 0x003FFF)>>2,))
     sine_gen.progress()
     square_gen.progress()
 

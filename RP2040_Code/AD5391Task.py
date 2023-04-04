@@ -11,7 +11,6 @@ class AD5391:
         self.RESET.direction = digitalio.Direction.OUTPUT
         self.RESET.value = False  # Set the reset pin low (active low)
 
-        self.RESET.value = True # Set the reset pin high (active low)
 
         self.SYNC = digitalio.DigitalInOut(board.GP10)
         self.SYNC.direction = digitalio.Direction.OUTPUT
@@ -27,7 +26,7 @@ class AD5391:
 
         self.CLR = digitalio.DigitalInOut(board.GP21)
         self.CLR.direction = digitalio.Direction.OUTPUT
-        self.CLR.value = True
+        self.CLR.value = False
 
 
         self.BUSY = digitalio.DigitalInOut(board.GP20)
@@ -35,12 +34,13 @@ class AD5391:
 
         self.MON_OUT = analogio.AnalogIn(board.GP26)
 
+        self.RESET.value = True # Set the reset pin high (active low)
 
         # SPI setup
         self.spi = busio.SPI(board.GP18, MISO=board.GP16, MOSI=board.GP19)
         while not self.spi.try_lock():
              pass
-        self.spi.configure(baudrate=50000000)  # Set SPI clock speed to 50 MHz
+        self.spi.configure(baudrate=100000)  # Set SPI clock speed to 50 MHz
         self.spi.unlock()
 
     #read MON_OUT value
@@ -60,7 +60,7 @@ class AD5391:
 #   Write a Value to the DAC (24 bit data word)
 #   24 bits are as follows
 #   ~A/B, R/~W, 0, 0, A3, A2, A1, A0, REG1, REG0, DB11, DB10, DB9, DB8, DB7, DB6, DB5, DB4, DB3, DB2, DB1, DB0, X, X
-#   23  ,22   , 21,20,19, 18, 17, 16, 15,   14 
+#   23  ,22   , 21,20,19, 18, 17, 16, 15,   14
 #   ~A/B Toggle Mode, Determines if data is written to the A or B Register
 #   R/~W Read Write Control Bit
 #   A3- A0 Addresses the Input Channels
@@ -69,14 +69,16 @@ class AD5391:
     def write_dac(self, channel, value, toggle_mode=False, ab_select=False, reg_select=3):
         # Asserts that the Channel Must be Between 0 and 15. Given this is a 16 channel DAC
         assert 0 <= channel <= 15, "Channel must be between 0 and 15"
-        # Asserts that the output value must be between 0 and 4095 
+        # Asserts that the output value must be between 0 and 4095
         assert 0 <= value <= 4095, "Value must be between 0 and 4095"
-        # Asserts that the register must be between 0 and 3 this must be given the values. 
+        # Asserts that the register must be between 0 and 3 this must be given the values.
         # 3 input data Register (Defaults to this Register)
-        # 2 Offset Register 
+        # 2 Offset Register
         # 1 Gain Register
         # 0 Special Function Register
         assert 0 <= reg_select <= 3, "Register select must be between 0 and 3"
+
+        self.LDAC.value = True
 
         ab_bit = 1 if toggle_mode and ab_select else 0
         rw_bit = 0  # Write operation
@@ -92,6 +94,8 @@ class AD5391:
         self.spi.write(spi_data)
         self.SYNC.value = True
         self.spi.unlock()
+
+        self.LDAC.value = False
 
 # Write DAC RAW Function (To Try and Activate the Internal Reference by setting the control register)
 # Writing Control Register
@@ -110,16 +114,17 @@ class AD5391:
 # CR9 = 1 Current Boost Control (1 Maximizes the bias current to the output amplifier while in increasing power consumption)
 # CR8 = 1 Internal / External Reference (1 Uses Internal Reference)
 # CR7 = 1 Enable Channel Monitor Function (1 allows channels to be routed to the output)
-# CR6 = 0 Enable Thermal Monitor Function 
+# CR6 = 0 Enable Thermal Monitor Function
 # CR5-CR2 = Don't CARE
-# CR3-CR2 = Toggle Function Enable 
+# CR3-CR2 = Toggle Function Enable
     def write_dac_raw(self, data):
         assert isinstance(data, int) and data >= 0 and data < (1 << 24), "Data must be a 24-bit integer"
-        
+        self.LDAC.value = True
         self.spi.try_lock()
         self.SYNC.value = False
         self.spi.write(data.to_bytes(3, "big"))
         self.SYNC.value = True
+        self.LDAC.value = False
         self.spi.unlock()
 
 
@@ -144,13 +149,48 @@ class AD5391:
         self.send_sfr_command(command.to_bytes(3, 'big'))
 
     def monitor_channel(self, channel):
-        command = (0b01010 << 20) | (channel & 0x3F) << 14
+        command = (0b0000_1010_0000_0000_0000_0000) | (channel & 0x0F) << 8
         self.send_sfr_command(command.to_bytes(3, 'big'))
 
 
     def send_sfr_command(self, command):
+        self.SYNC.value = False
+
         while not self.spi.try_lock():
             pass
 
         self.spi.write(command)
         self.spi.unlock()
+
+        self.SYNC.value = True
+
+    # control_register_value = ad5391.read_register(0b0001, 0b11) (Reads the value written to the output register, Channel 1)
+    def read_register(self, channel, reg_select=0b00):
+        # Asserts that the Channel Must be Between 0 and 15. Given this is a 16 channel DAC
+        assert 0 <= channel <= 15, "Channel must be between 0 and 15"
+        # Asserts that the register must be between 0 and 3
+        assert 0 <= reg_select <= 3, "Register select must be between 0 and 3"
+
+        ab_bit = 0
+        rw_bit = 1  # Read operation
+        address = (channel & 0b1111)
+        reg_bits = (reg_select & 0b11)
+
+        control_bits = ab_bit << 23 | rw_bit << 22 | address << 16 | reg_bits << 14
+        spi_data = control_bits.to_bytes(3, "big")
+
+        self.spi.try_lock()
+        self.SYNC.value = False
+        self.spi.write(spi_data)
+        self.SYNC.value = True  # SYNC should be high between write and read operations
+        self.SYNC.value = False
+        nop_command = (0x000000).to_bytes(3, "big")
+
+        #self.spi.write(nop_command)
+        result = bytearray(3)
+        self.spi.readinto(result)
+        self.SYNC.value = True
+        self.spi.unlock()
+
+        return int.from_bytes(result, "big")
+
