@@ -1,12 +1,13 @@
 import time
 import math
+from AD5391Task import AD5391
 
 class SineWaveGenerator:
     def __init__(self, channel, period, amplitude, dac=None):
         self.channel = channel
         self.period = period
         self.amplitude = amplitude
-        self.dac = dac if dac is not None else AD5391()
+        self.dac = dac if dac is not None else AD5491()
         self.start_time = time.monotonic()
 
     def progress(self):
