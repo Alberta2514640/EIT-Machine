@@ -7,31 +7,40 @@ import analogio
 
 class AD5391:
     def __init__(self):
+        # Setup the AD5391 Peripheral so that it is ready for programming
+
+        #RESET the componnent and hold the component in reset state until the reset of the pin values can be set. 
         self.RESET = digitalio.DigitalInOut(board.GP14)
         self.RESET.direction = digitalio.Direction.OUTPUT
         self.RESET.value = False  # Set the reset pin low (active low)
 
-
+        #SYNC Output  This is the frame synchronization input signal for the serial interface.
+        #When taken low, the internal counter is enabled to count the required number of clocks before the addressed register is updated.
+        #This may be controlled later by pairing it with the I2C if we want to drive our signals Synced to some other output.  
         self.SYNC = digitalio.DigitalInOut(board.GP10)
         self.SYNC.direction = digitalio.Direction.OUTPUT
         self.SYNC.value = False
 
+        #PD Output. When enabled sets the DAC into a very low power mode. 22uA
         self.PD = digitalio.DigitalInOut(board.GP15)
         self.PD.direction = digitalio.Direction.OUTPUT
         self.PD.value = False
 
+        #Load DAC inputs. Active low. This can allow the outputs for the registers to be updated together. 
         self.LDAC = digitalio.DigitalInOut(board.GP22)
         self.LDAC.direction = digitalio.Direction.OUTPUT
         self.LDAC.value = False
 
+        #Allows all the DAC values to be cleared on the Falling edge setting them all to the clear values. LDAC pulses will be ignored during this. 
         self.CLR = digitalio.DigitalInOut(board.GP21)
         self.CLR.direction = digitalio.Direction.OUTPUT
         self.CLR.value = False
 
-
+        #This shows if internal calculations are taking place. 
         self.BUSY = digitalio.DigitalInOut(board.GP20)
         self.BUSY.direction = digitalio.Direction.INPUT
 
+        #Monitor Output this value is the output from one of the DACs and is set to one of the ADCs so that we can read the changes. 
         self.MON_OUT = analogio.AnalogIn(board.GP26)
 
         self.RESET.value = True # Set the reset pin high (active low)
@@ -40,8 +49,15 @@ class AD5391:
         self.spi = busio.SPI(board.GP18, MISO=board.GP16, MOSI=board.GP19)
         while not self.spi.try_lock():
              pass
-        self.spi.configure(baudrate=50000000)  # Set SPI clock speed to 50 MHz
+        self.spi.configure(baudrate=50000000)  # Set SPI clock speed to 50 MHz (This is the maximum that it can be set to)
         self.spi.unlock()
+
+    #Set the PD 
+    def set_PD_state(self, state):
+        self.PD.value = state
+
+    def get_PD_state(self):
+        return self.PD.value
 
     #read MON_OUT value
     def read_mon_out(self):
@@ -51,6 +67,7 @@ class AD5391:
     def read_mon_out_voltage(self):
         return self.MON_OUT.value * 3.3 / 65535
 
+    #Reads the busy pin 
     def read_busy_pin(self):
         return self.BUSY.value
 
