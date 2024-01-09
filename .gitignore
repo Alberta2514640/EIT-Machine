@@ -127,3 +127,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# KiCAD Backup files
+PCB_Design/16_AWG-backups
