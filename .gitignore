@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # KiCAD Backup files
-PCB_Design/16_AWG-backups
+PCB_Design/picoAWG-backups

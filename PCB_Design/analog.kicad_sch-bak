@@ -1,0 +1,21 @@
+(kicad_sch (version 20230121) (generator eeschema)
+
+  (uuid 78c947ff-8f85-4de2-98c9-fdc0c0e51732)
+
+  (paper "A4")
+
+  (lib_symbols
+  )
+
+
+  (text "We should put the signal from the electrode into a unity gain\nop-amp before we feed it into the mux.\n\nWe can probably just put the FWR after the mux."
+    (at 165.1 90.17 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid aa2e5009-0ef1-4fac-9101-e10851babe22)
+  )
+  (text "It would be nice to have an ADC that has a PGA that\ncan do one-shot differential conversions at high speed.\n\nThis should only need about 500ksps, since most EIT seems to\nonly go up to 50kHz, and we would like to have 10x the frequency for safety.\n\nSince the ADC on the RP2040 has a SAR ADC, we might want to look\nfor a Delta-Sigma ADC here."
+    (at 165.1 78.74 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid ffdf2a0c-cd08-4a09-86e3-8f7c8846f952)
+  )
+)

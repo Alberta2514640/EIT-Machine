@@ -1,0 +1,11 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "ADG725BSUZ")(type "KiCad")(uri "${KIPRJMOD}/Symbols/ADG725BSUZ/ADG725BSUZ.kicad_sym")(options "")(descr ""))
+  (lib (name "ADA4817-2ACPZ-R7")(type "KiCad")(uri "${KIPRJMOD}/Symbols/ADA4817-2ACPZ-R7/ADA4817-2ACPZ-R7.kicad_sym")(options "")(descr ""))
+  (lib (name "AD9512BCPZ")(type "KiCad")(uri "${KIPRJMOD}/Symbols/AD9512BCPZ/AD9512BCPZ.kicad_sym")(options "")(descr ""))
+  (lib (name "OPA4228UA")(type "KiCad")(uri "${KIPRJMOD}/Symbols/OPA4228UA/OPA4228UA.kicad_sym")(options "")(descr ""))
+  (lib (name "ADG1406BRUZ")(type "KiCad")(uri "${KIPRJMOD}/Symbols/ADG1406BRUZ/ADG1406BRUZ.kicad_sym")(options "")(descr ""))
+  (lib (name "INA849DR")(type "KiCad")(uri "${KIPRJMOD}/Symbols/INA849DR/INA849DR.kicad_sym")(options "")(descr ""))
+  (lib (name "AD7680ARJZ")(type "KiCad")(uri "${KIPRJMOD}/Symbols/AD7680ARJZ/AD7680ARJZ.kicad_sym")(options "")(descr ""))
+  (lib (name "M64W103KB40")(type "KiCad")(uri "${KIPRJMOD}/Symbols/M64W103KB40/2024-02-08_07-04-23.kicad_sym")(options "")(descr ""))
+)
