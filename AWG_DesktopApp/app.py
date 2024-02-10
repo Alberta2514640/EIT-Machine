@@ -1,6 +1,10 @@
 import sys
+import io
 from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel, QLineEdit, QTextEdit, QVBoxLayout, QHBoxLayout, QGroupBox, QPushButton, QSlider
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPainter, QPixmap
+from EIT.JAC import eit_external_mesh
+from NewNumpyImageWindow import NewImage
 
 class Example(QWidget):
     
@@ -180,11 +184,33 @@ class Example(QWidget):
         groupBox2.setLayout(vbox2)
         grid.addWidget(groupBox2, 0, 1, 2, 1)
 
+        # EIT Panel
+        groupBox3 = QGroupBox("EIT Options")
+        
+        vbox3 = QVBoxLayout()
+        name = QLabel("Model")
+        select= QPushButton("JAC")
+        global image
+        image=select.clicked.connect(self.select_clicked)
+        vbox3.addWidget(name)
+        vbox3.addWidget(select)
+
+        vbox3.addStretch(1)
+        groupBox3.setLayout(vbox3)
+        grid.addWidget(groupBox3, 0, 2, 3, 2)
+
         self.setGeometry(300, 300, 700, 400)
         self.setWindowTitle('16 Channel Arbitrary Waveform Generator')
         self.show()
 
+    def select_clicked(self):
+        m=eit_external_mesh.main()
+        global image
+        image=NewImage('JAC.png')
+        return image
+        
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    global image
     ex = Example()
     sys.exit(app.exec_())
