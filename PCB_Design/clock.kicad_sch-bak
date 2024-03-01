@@ -578,9 +578,6 @@
   (junction (at 203.2 29.21) (diameter 0) (color 0 0 0 0)
     (uuid 26ad307e-d09d-46ee-81f7-507959872578)
   )
-  (junction (at 228.6 66.04) (diameter 0) (color 0 0 0 0)
-    (uuid 28def3bd-27ca-4c70-a6eb-d35d79625aa1)
-  )
   (junction (at 172.72 50.8) (diameter 0) (color 0 0 0 0)
     (uuid 295f0ae3-b0e4-4c87-a28d-2ae0552d251a)
   )
@@ -625,9 +622,6 @@
   )
   (junction (at 217.17 54.61) (diameter 0) (color 0 0 0 0)
     (uuid 654ddb16-e4d9-4504-984a-1d1360f58b90)
-  )
-  (junction (at 203.2 73.66) (diameter 0) (color 0 0 0 0)
-    (uuid 72aa766d-7a1f-4377-9c25-75e920694140)
   )
   (junction (at 233.68 58.42) (diameter 0) (color 0 0 0 0)
     (uuid 74832969-be05-4296-9661-4998a1a9c6b3)
@@ -676,9 +670,6 @@
   )
   (junction (at 177.8 21.59) (diameter 0) (color 0 0 0 0)
     (uuid a3ce0194-dfc5-4f5e-9204-964f46c79cf0)
-  )
-  (junction (at 217.17 66.04) (diameter 0) (color 0 0 0 0)
-    (uuid b27456d0-6d0e-4b60-b69a-053392a42253)
   )
   (junction (at 121.92 156.21) (diameter 0) (color 0 0 0 0)
     (uuid b6239de8-f617-4c7e-a175-d1285947f147)
@@ -791,10 +782,6 @@
     (stroke (width 0) (type default))
     (uuid 02f2da1e-ae22-40a9-87d1-871d9b0faae1)
   )
-  (wire (pts (xy 203.2 76.2) (xy 203.2 73.66))
-    (stroke (width 0) (type default))
-    (uuid 03411de5-162f-4261-bec4-debd4a49b0d6)
-  )
   (wire (pts (xy 35.56 133.35) (xy 52.07 133.35))
     (stroke (width 0) (type default))
     (uuid 0392033f-97c8-4f01-863a-c9dd9091703e)
@@ -883,10 +870,6 @@
     (stroke (width 0) (type default))
     (uuid 247d610b-1bcd-4477-b2c2-b4f794d2ca89)
   )
-  (wire (pts (xy 203.2 73.66) (xy 217.17 73.66))
-    (stroke (width 0) (type default))
-    (uuid 2533d06e-055b-422a-a9ac-1a5937c9c647)
-  )
   (wire (pts (xy 35.56 167.64) (xy 52.07 167.64))
     (stroke (width 0) (type default))
     (uuid 27e1f4f5-d7f0-4fff-80d1-805fde62d00f)
@@ -966,10 +949,6 @@
   (wire (pts (xy 121.92 171.45) (xy 121.92 156.21))
     (stroke (width 0) (type default))
     (uuid 430e5181-db51-4446-97b2-f2dea90f3c91)
-  )
-  (wire (pts (xy 228.6 66.04) (xy 228.6 71.12))
-    (stroke (width 0) (type default))
-    (uuid 470d6621-24b7-4933-aef7-d03d9e8763f7)
   )
   (wire (pts (xy 45.72 170.18) (xy 45.72 154.94))
     (stroke (width 0) (type default))
@@ -1087,10 +1066,6 @@
     (stroke (width 0) (type default))
     (uuid 875a329c-aa2e-4101-9e25-1cd7d4362bb3)
   )
-  (wire (pts (xy 203.2 66.04) (xy 217.17 66.04))
-    (stroke (width 0) (type default))
-    (uuid 87e35130-f4ce-450b-ab73-56b88ee4c8fa)
-  )
   (wire (pts (xy 71.12 54.61) (xy 77.47 54.61))
     (stroke (width 0) (type default))
     (uuid 8a127e70-dfbe-4cc9-b5f7-c83ace04dd86)
@@ -1174,10 +1149,6 @@
   (wire (pts (xy 233.68 53.34) (xy 233.68 55.88))
     (stroke (width 0) (type default))
     (uuid a5523097-5bfb-40fc-8d6a-3538b38cd43e)
-  )
-  (wire (pts (xy 217.17 66.04) (xy 228.6 66.04))
-    (stroke (width 0) (type default))
-    (uuid a68e2879-5e8c-44dd-8d02-bdc7d57017c7)
   )
   (wire (pts (xy 30.48 133.35) (xy 35.56 133.35))
     (stroke (width 0) (type default))
@@ -1267,7 +1238,7 @@
     (stroke (width 0) (type default))
     (uuid c6a10845-c8f3-426c-85c6-c35743294baf)
   )
-  (wire (pts (xy 228.6 54.61) (xy 228.6 66.04))
+  (wire (pts (xy 228.6 54.61) (xy 228.6 71.12))
     (stroke (width 0) (type default))
     (uuid cc5a948c-d709-427a-9cfd-dca3bd5fda1b)
   )
@@ -1707,38 +1678,12 @@
     (property "Datasheet" "~" (at 190.5 58.42 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4d))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39801))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
           (reference "C186") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "Device:C") (at 217.17 69.85 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
-    (uuid 1c9f7d5f-8c69-41c4-a82f-d9b1a5c8f321)
-    (property "Reference" "C189" (at 220.98 68.58 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Value" "0.1u" (at 220.98 71.12 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (at 218.1352 73.66 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "~" (at 217.17 69.85 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid c388afce-8ee6-4983-8cd8-2cebdabd9136))
-    (pin "2" (uuid 185fc00f-8e3f-4310-b79a-0b209f86e2df))
-    (instances
-      (project "picoAWG"
-        (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
-          (reference "C189") (unit 1)
         )
       )
     )
@@ -1860,8 +1805,8 @@
     (property "Datasheet" "~" (at 217.17 58.42 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4e))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39802))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
@@ -1938,8 +1883,8 @@
     (property "Datasheet" "~" (at 177.8 25.4 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4f))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39803))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
@@ -2248,8 +2193,8 @@
     (property "Datasheet" "~" (at 217.17 25.4 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d50))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39804))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
@@ -2274,8 +2219,8 @@
     (property "Datasheet" "~" (at 217.17 46.99 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d51))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39805))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
@@ -2351,8 +2296,8 @@
     (property "Datasheet" "~" (at 203.2 46.99 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d52))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39806))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
@@ -2387,32 +2332,6 @@
     )
   )
 
-  (symbol (lib_id "Device:C") (at 203.2 69.85 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid 6f67da13-00aa-456e-ab33-d50e2fc67e58)
-    (property "Reference" "C172" (at 207.01 68.58 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Value" "0.1u" (at 207.01 71.12 0)
-      (effects (font (size 1.27 1.27)) (justify left))
-    )
-    (property "Footprint" "Capacitor_SMD:C_0603_1608Metric" (at 204.1652 73.66 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "~" (at 203.2 69.85 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 098bd2d3-4bcc-44dc-bed7-bec93586b760))
-    (pin "2" (uuid 2de020cb-3b2f-49e0-ac6e-12e682cb9da4))
-    (instances
-      (project "picoAWG"
-        (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
-          (reference "C172") (unit 1)
-        )
-      )
-    )
-  )
-
   (symbol (lib_id "Device:C") (at 177.8 36.83 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
     (uuid 6fa71855-dabe-4ddb-8497-a58f3d0df9bb)
@@ -2428,8 +2347,8 @@
     (property "Datasheet" "~" (at 177.8 36.83 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d53))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39807))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
@@ -2634,8 +2553,8 @@
     (property "Datasheet" "~" (at 177.8 58.42 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d54))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39808))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
@@ -2685,8 +2604,8 @@
     (property "Datasheet" "~" (at 203.2 25.4 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d55))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39809))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
@@ -2840,37 +2759,12 @@
     (property "Datasheet" "~" (at 203.2 36.83 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d56))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b3980a))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
           (reference "C179") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "power:GND") (at 203.2 76.2 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
-    (uuid b4aad194-3828-4795-a6a9-94cca0400679)
-    (property "Reference" "#PWR0246" (at 203.2 82.55 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "GND" (at 203.2 81.28 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "" (at 203.2 76.2 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 203.2 76.2 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid fe2af8b6-8df0-4788-81b3-7ced4899e3cc))
-    (instances
-      (project "picoAWG"
-        (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
-          (reference "#PWR0246") (unit 1)
         )
       )
     )
@@ -2967,8 +2861,8 @@
     (property "Datasheet" "~" (at 217.17 36.83 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d57))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b3980b))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
@@ -2993,8 +2887,8 @@
     (property "Datasheet" "~" (at 177.8 46.99 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d58))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b3980c))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
@@ -3345,8 +3239,8 @@
     (property "Datasheet" "~" (at 190.5 36.83 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d59))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b3980d))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
@@ -3371,8 +3265,8 @@
     (property "Datasheet" "~" (at 190.5 25.4 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d5a))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b3980e))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"
@@ -3422,8 +3316,8 @@
     (property "Datasheet" "~" (at 203.2 58.42 0)
       (effects (font (size 1.27 1.27)) hide)
     )
-    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d5b))
-    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b3980f))
+    (pin "1" (uuid 918daf8f-6eca-4c64-bf03-2980ee4e5d4c))
+    (pin "2" (uuid 9ec69dd4-1d99-41bc-811b-8aeef5b39800))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/e4288591-1aed-46a6-b704-31fbd7f1f579"

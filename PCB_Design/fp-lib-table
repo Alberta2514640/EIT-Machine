@@ -8,4 +8,5 @@
   (lib (name "INA849DR")(type "KiCad")(uri "${KIPRJMOD}/Symbols/INA849DR/footprints.pretty")(options "")(descr ""))
   (lib (name "AD7680ARJZ")(type "KiCad")(uri "${KIPRJMOD}/Symbols/AD7680ARJZ/footprints.pretty")(options "")(descr ""))
   (lib (name "M64W103KB40")(type "KiCad")(uri "${KIPRJMOD}/Symbols/M64W103KB40/footprints.pretty")(options "")(descr ""))
+  (lib (name "ANT11SF1CQE")(type "KiCad")(uri "${KIPRJMOD}/Symbols/ANT11SF1CQE/ANT11SF1CQE.pretty")(options "")(descr ""))
 )
