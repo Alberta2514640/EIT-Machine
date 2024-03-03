@@ -43,11 +43,11 @@
         )
       )
     )
-    (symbol "Connector:Barrel_Jack" (pin_names (offset 1.016)) (in_bom yes) (on_board yes)
+    (symbol "Connector:Barrel_Jack_Switch" (pin_names hide) (in_bom yes) (on_board yes)
       (property "Reference" "J" (at 0 5.334 0)
         (effects (font (size 1.27 1.27)))
       )
-      (property "Value" "Barrel_Jack" (at 0 -5.08 0)
+      (property "Value" "Barrel_Jack_Switch" (at 0 -5.08 0)
         (effects (font (size 1.27 1.27)))
       )
       (property "Footprint" "" (at 1.27 -1.016 0)
@@ -59,13 +59,13 @@
       (property "ki_keywords" "DC power barrel jack connector" (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
-      (property "ki_description" "DC Barrel Jack" (at 0 0 0)
+      (property "ki_description" "DC Barrel Jack with an internal switch" (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
       (property "ki_fp_filters" "BarrelJack*" (at 0 0 0)
         (effects (font (size 1.27 1.27)) hide)
       )
-      (symbol "Barrel_Jack_0_1"
+      (symbol "Barrel_Jack_Switch_0_1"
         (rectangle (start -5.08 3.81) (end 5.08 -3.81)
           (stroke (width 0.254) (type default))
           (fill (type background))
@@ -80,8 +80,26 @@
         )
         (polyline
           (pts
+            (xy 1.27 -2.286)
+            (xy 1.905 -1.651)
+          )
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
             (xy 5.08 2.54)
             (xy 3.81 2.54)
+          )
+          (stroke (width 0.254) (type default))
+          (fill (type none))
+        )
+        (polyline
+          (pts
+            (xy 5.08 0)
+            (xy 1.27 0)
+            (xy 1.27 -2.286)
+            (xy 0.635 -1.651)
           )
           (stroke (width 0.254) (type default))
           (fill (type none))
@@ -103,7 +121,7 @@
           (fill (type outline))
         )
       )
-      (symbol "Barrel_Jack_1_1"
+      (symbol "Barrel_Jack_Switch_1_1"
         (pin passive line (at 7.62 2.54 180) (length 2.54)
           (name "~" (effects (font (size 1.27 1.27))))
           (number "1" (effects (font (size 1.27 1.27))))
@@ -111,6 +129,10 @@
         (pin passive line (at 7.62 -2.54 180) (length 2.54)
           (name "~" (effects (font (size 1.27 1.27))))
           (number "2" (effects (font (size 1.27 1.27))))
+        )
+        (pin passive line (at 7.62 0 180) (length 2.54)
+          (name "~" (effects (font (size 1.27 1.27))))
+          (number "3" (effects (font (size 1.27 1.27))))
         )
       )
     )
@@ -926,6 +948,10 @@
     (stroke (width 0) (type default))
     (uuid 90333231-4625-457d-b0a1-b1a1ffcd1a89)
   )
+  (wire (pts (xy 130.81 59.69) (xy 134.62 59.69))
+    (stroke (width 0) (type default))
+    (uuid a0b671f0-d9f9-4868-9d5e-c734f819c47b)
+  )
   (wire (pts (xy 134.62 139.7) (xy 134.62 142.24))
     (stroke (width 0) (type default))
     (uuid a15cc198-7abc-4f0d-a7bb-3b5bb5048ab7)
@@ -1009,6 +1035,10 @@
   (wire (pts (xy 148.59 97.79) (xy 148.59 96.52))
     (stroke (width 0) (type default))
     (uuid fce3f7d5-87b0-47e5-abde-a08f7abcd447)
+  )
+  (wire (pts (xy 134.62 59.69) (xy 134.62 60.96))
+    (stroke (width 0) (type default))
+    (uuid fd15a5fc-a38b-4746-b6b9-02a4eee60848)
   )
 
   (text "DC Input" (at 124.46 44.45 0)
@@ -1435,8 +1465,8 @@
     )
   )
 
-  (symbol (lib_id "Connector:Barrel_Jack") (at 123.19 59.69 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+  (symbol (lib_id "Connector:Barrel_Jack_Switch") (at 123.19 59.69 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
     (uuid 40952cf3-9bcd-4fe1-bf4f-675e5d4acb45)
     (property "Reference" "J4" (at 123.19 50.8 0)
       (effects (font (size 1.27 1.27)))
@@ -1452,6 +1482,7 @@
     )
     (pin "2" (uuid 99f7302b-60c6-4d18-83de-958a565ca9cf))
     (pin "1" (uuid 3c3a4c28-46f5-448a-a5d2-19af9d32202c))
+    (pin "3" (uuid ccc0c851-861a-4b36-a93b-7bc2828283d9))
     (instances
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/45afd372-1c50-4efa-9ce4-01ad3c990303"
@@ -1866,6 +1897,31 @@
       (project "picoAWG"
         (path "/98622ba7-93bb-40c5-bd9c-32780137208f/45afd372-1c50-4efa-9ce4-01ad3c990303"
           (reference "D1") (unit 1)
+        )
+      )
+    )
+  )
+
+  (symbol (lib_id "power:GND") (at 134.62 60.96 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
+    (uuid b59a149c-5895-4358-98b0-6d7ad68d943e)
+    (property "Reference" "#PWR0247" (at 134.62 67.31 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Value" "GND" (at 134.62 66.04 0)
+      (effects (font (size 1.27 1.27)))
+    )
+    (property "Footprint" "" (at 134.62 60.96 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (property "Datasheet" "" (at 134.62 60.96 0)
+      (effects (font (size 1.27 1.27)) hide)
+    )
+    (pin "1" (uuid 57859b31-d192-40ba-8da8-b8d246d3b726))
+    (instances
+      (project "picoAWG"
+        (path "/98622ba7-93bb-40c5-bd9c-32780137208f/45afd372-1c50-4efa-9ce4-01ad3c990303"
+          (reference "#PWR0247") (unit 1)
         )
       )
     )
