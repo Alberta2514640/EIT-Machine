@@ -2,10 +2,32 @@ import PySimpleGUI as sg
 import math
 import string
 
-#do pip install serial and pytime
-import serial
+#do pip install pyserial, pyusb and pytime
+import serial.tools.list_ports
 import time
+import usb.core
 
+
+def send_serial_message(message):
+    # Serial Connection Communication with the Raspberry
+    # Open serial connection
+    ser = serial.Serial('COM5', 9600)  # Adjust the port as needed
+
+    # Send a message
+    #message = "Hello, Raspberry Pi Pico!\n"
+    ser.write(message.encode())
+
+    timeout_seconds = 5  # Set timeout to 5 seconds
+    start_time = time.time()  # Get current time
+    while True:
+        if time.time() - start_time > timeout_seconds:
+            print("Timeout: No response from Raspberry Pi.")
+            break  # Exit loop if timeout is reached
+        data = ser.readline().decode().strip()
+        if data:
+            print("GUI Received:", data)
+            break 
+    ser.close()
 
 channel_count = 16
 channel_list = [f"Channel {i}" for i in range(1,channel_count+1)]
@@ -171,29 +193,8 @@ def change_channel(window):
     else:
         channel_status[prev_num-1]=1
 
-    serialConnection= serial.Serial('COM3',9600, timeout=1)
-    serialConnection.write(b'Hello from GUI\n')
-
-    timeout_seconds = 5  # Set timeout to 5 seconds
-    start_time = time.time()  # Get current time
-    while True:
-        if time.time() - start_time > timeout_seconds:
-            print("Timeout: No response from Raspberry Pi.")
-            break  # Exit loop if timeout is reached
-        data = serialConnection.read(10)#.decode().strip()
-        if data:
-            print("GUI Received:", data)
-            break  # Exit loop if data is received
-    '''
-    # Serial Connection Communication with the Raspberry
-    serialConnection.write(b'Hello from GUI\n')
-    while True:
-        data = serialConnection.readline().decode().strip()  # Read a line of data with a timeout
-        if data:
-            print("Received:", data)
-            break
-    '''
-    serialConnection.close()
+    # Send message to Raspberry Pi Pico
+    send_serial_message("Hello, Raspberry Pi Pico!\n")
     #Update the window with the new channel parameters
     current_channel = values['-CHANNELNUM-']
     window['-CHANNELTEXT-'].update(str(current_channel))
