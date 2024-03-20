@@ -1,98 +1,52 @@
 import time
-import board
+import busio
+import rp2pio
 import digitalio
-import supervisor
-from ledTask import toggle_leds,setup_leds
-from AD5391Task import AD5391
-from sine_wave_generator import SineWaveGenerator
-from square_wave_generator import SquareWaveGenerator
-# Set up the GPIO pins for the LEDs
+import bitbangio
+import adafruit_74hc595 as srio
+import microcontroller
+from board import *
 
+# CircuitPython, by convention, uses GPIO number to refer to pins, rather than physical pin number.
 
-setup_leds()
+# Misc. Control Signals
+lSR_CLR   = digitalio.DigitalInOut(GP12) # (GP12) ~SR_CLR
+lSR_OE    = digitalio.DigitalInOut(GP13) # (GP13) ~SR_OE
+lDDS_SYNC = digitalio.DigitalInOut(GP16) # (GP16) ~DDS SYNC
+lAMP_PD   = digitalio.DigitalInOut(GP18) # (GP18) ~AMP PD
+lEIT_PD   = digitalio.DigitalInOut(GP19) # (GP19) ~EIT PD
+MUX_EN    = digitalio.DigitalInOut(GP20) # (GP20) MUX EN
 
-# Initialize AD5391
-ad5391 = AD5391()
-# Write DAC RAW Function (To Try and Activate the Internal Reference by setting the control register)
-# Writing Control Register
-# REG1=REG0=0
-# A3-A0 = 1100
-# DB13-DB0 Contains CR13 - CR0
-# This Setup gives the following
-# A/~B = 0
-# R/~W = 0
-# 00 (Always 0)
-# A3-A0 = 1100 (Control Register)
-# REG1-REG0 = 00 (Special Functions)
-# DB13 - DB12 = Doesn't apply to AD5391
-# CR11 = 1 Power Down Status. Configures the Amplifier Behavior in Power Down
-# CR10 = 0 REF Select (Sets the Internal Reference 1/2,5V 0/1.25V)
-# CR9 = 1 Current Boost Control (1 Maximizes the bias current to the output amplifier while in increasing power consumption)
-# CR8 = 1 Internal / External Reference (1 Uses Internal Reference)
-# CR7 = 1 Enable Channel Monitor Function (1 allows channels to be routed to the output)
-# CR6 = 0 Enable Thermal Monitor Function
-# CR5-CR2 = Don't CARE
-# CR1-CR0 = Toggle Function Enable
+# SPI chip selects
+lDDS1_CS   = digitalio.DigitalInOut(GP1)   # (GP1 ) AD9106 #1 (DDS 1)
+lDDS2_CS   = digitalio.DigitalInOut(GP5)   # (GP5 ) AD9106 #2 (DDS 2)
+lDDS3_CS   = digitalio.DigitalInOut(GP17)  # (GP17) AD9106 #3 (DDS 3)
+lDDS4_CS   = digitalio.DigitalInOut(GP21)  # (GP21) AD9106 #4 (DDS 4)
+lADC_CS    = digitalio.DigitalInOut(GP25)  # (GP25) AD7680 (ADC)
+lCLKDIV_CS = digitalio.DigitalInOut(GP9)   # (GP9 ) AD9512 (Clock Divider)
 
-sine_gen = SineWaveGenerator(channel=1, period=1, amplitude=4095, dac=ad5391)
-square_gen = SquareWaveGenerator(channel=0, period=1, amplitude=4095, dac=ad5391)
+pins = [lSR_CLR, lSR_OE, lDDS_SYNC, lAMP_PD, lEIT_PD, MUX_EN, lDDS1_CS,
+        lDDS1_CS, lDDS2_CS, lDDS3_CS, lDDS4_CS, lADC_CS, lCLKDIV_CS]
+for pin in pins:
+    pin.switch_to_output(True, digitalio.DriveMode.PUSH_PULL)
 
-def process_command(command):
-    if command == "info":
-        response = "This is a Basic 16 Channel Arbitrary Waveform Generator v0.01"
-    elif command == "read_mon_out":
-        mon_out_value = ad5391.read_mon_out()
-        response = f"MON_OUT value: {mon_out_value}"
-    elif command == "read_mon_out_voltage":
-        mon_out_voltage = ad5391.read_mon_out_voltage()
-        response = f"MON_OUT voltage: {mon_out_voltage:.4f} V"
-    elif command == "read_busy_pin":
-        busy_state = ad5391.read_busy_pin()
-        response = f"BUSY pin state (False Means Busy): {busy_state}"
-    else:
-        cmd_parts = command.split(' ')
-        if cmd_parts[0] == "set_ldac_pin":
-            if len(cmd_parts) != 2:
-                response = "Usage: set_ldac_pin [True|False]"
-            else:
-                state = cmd_parts[1].lower() == "true"
-                ad5391.set_ldac_pin(state)
-                response = f"LDAC pin state set to: {state}"
-        elif cmd_parts[0] == "write_dac":
-            if len(cmd_parts) < 3:
-                response = "Usage: write_dac channel value [toggle_mode] [ab_select] [reg_select]"
-            else:
-                channel = int(cmd_parts[1])
-                value = int(cmd_parts[2])
-                toggle_mode = cmd_parts[3].lower() == "true" if len(cmd_parts) > 3 else False
-                ab_select = cmd_parts[4].lower() == "true" if len(cmd_parts) > 4 else False
-                reg_select = int(cmd_parts[5]) if len(cmd_parts) > 5 else 0
+# Set up SPI interfaces
+SPI0 = busio.SPI(GP2, GP3, GP0) # SPI 0
+SPI1 = busio.SPI(GP10, GP11, GP8) # SPI 1
+SPI_SR = bitbangio.SPI(GP14, GP15, None) # SPI SR (Shift Register)
 
-                ad5391.write_dac(channel, value, toggle_mode, ab_select, reg_select)
-                response = f"Value {value} written to channel {channel} with toggle_mode={toggle_mode}, ab_select={ab_select}, reg_select={reg_select}"
-        else:
-            response = "Unknown command"
+# Set up SN74HC595 (mux control shift register)ada
+sr = srio.ShiftRegister74HC595 (SPI_SR, None, 2)
+sr_pins = [sr.get_pin(n) for n in range(16)] # Array of OUTPUT pins that represent the outputs of the shift registers.
 
-    return response
+# Start sending out clock on uC_CLKOUT (GP23, PIO)
 
+# Put each SPI device in reset
 
-ad5391.monitor_channel(0)
+# Setup USB communications
 
-next_toggle = time.monotonic() + 1
+# Main loop
 
-while True:
-    now = time.monotonic()
-    if now >= next_toggle:
-        toggle_leds()
-        next_toggle = now + 0.05
-        control_register_value = ad5391.read_register(0b0001, 0b11)
-        ad5391.write_dac_raw(0b0_0_00_1100_00_101111_0000_00_00)
-        print(((control_register_value & 0x003FFF)>>2,))
-    sine_gen.progress()
-    square_gen.progress()
+# SPI Write Function Wrapper with CS
 
-
-    if supervisor.runtime.serial_bytes_available:
-        command = input().strip()
-        response = process_command(command)
-        print(response)
+# SPI Read Function Wrapper with CS
