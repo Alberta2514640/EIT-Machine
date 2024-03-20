@@ -130,32 +130,31 @@ dmypy.json
 .pyre/
 
 # KiCAD files
-PCB_Design/picoAWG-backups
-PCB_Design/*.lck
+*.lck
 
 # Temporary files
-PCB_Design/*.000
-PCB_Design/*.bak
-PCB_Design/*.bck
-PCB_Design/*.kicad_pcb-bak
-PCB_Design/*.kicad_sch-bak
-PCB_Design/*-backups
-PCB_Design/*.kicad_prl
-PCB_Design/*.sch-bak
-PCB_Design/*~
-PCB_Design/_autosave-*
-PCB_Design/*.tmp
-PCB_Design/*-save.pro
-PCB_Design/*-save.kicad_pcb
-PCB_Design/fp-info-cache
+*.000
+*.bak
+*.bck
+*.kicad_pcb-bak
+*.kicad_sch-bak
+*-backups
+*.kicad_prl
+*.sch-bak
+*~
+_autosave-*
+*.tmp
+*-save.pro
+*-save.kicad_pcb
+fp-info-cache
 
 # Netlist files (exported from Eeschema)
-PCB_Design/*.net
+*.net
 
 # Autorouter files (exported from Pcbnew)
-PCB_Design/*.dsn
-PCB_Design/*.ses
+*.dsn
+*.ses
 
 # Exported BOM files
-PCB_Design/*.xml
-PCB_Design/*.csv
+*.xml
+*.csv
