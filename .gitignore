@@ -129,5 +129,33 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# KiCAD Backup files
+# KiCAD files
 PCB_Design/picoAWG-backups
+PCB_Design/*.lck
+
+# Temporary files
+PCB_Design/*.000
+PCB_Design/*.bak
+PCB_Design/*.bck
+PCB_Design/*.kicad_pcb-bak
+PCB_Design/*.kicad_sch-bak
+PCB_Design/*-backups
+PCB_Design/*.kicad_prl
+PCB_Design/*.sch-bak
+PCB_Design/*~
+PCB_Design/_autosave-*
+PCB_Design/*.tmp
+PCB_Design/*-save.pro
+PCB_Design/*-save.kicad_pcb
+PCB_Design/fp-info-cache
+
+# Netlist files (exported from Eeschema)
+PCB_Design/*.net
+
+# Autorouter files (exported from Pcbnew)
+PCB_Design/*.dsn
+PCB_Design/*.ses
+
+# Exported BOM files
+PCB_Design/*.xml
+PCB_Design/*.csv
