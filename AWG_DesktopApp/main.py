@@ -145,8 +145,24 @@ def make_window(mode, theme=None):
               [ sg.Col(layout_eit,vertical_alignment='top')]]    
     
     
-    main_layout = [[sg.Column(eit_window_layout, visible = False, key = '-EIT-')],[sg.Column(layout, key = '-AWG-')]]
-    
+   # main_layout = [[sg.Column(eit_window_layout, visible = False, key = '-EIT-')],[sg.Column(layout, key = '-AWG-')]]
+    main_layout = [
+        [
+            sg.Menu([['File', ['Import', 'Export', 'Exit']], ['Tools', ['EIT']], ['Help', ['User Manual', 'Basics']]],
+                    k='-CUST MENUBAR-', p=0)
+        ],
+        [
+            sg.Column(
+                [
+                    [
+                        sg.Column(eit_window_layout, visible=(mode == "eit"), key='-EIT-'),
+                        sg.Column(layout, visible=(mode == "awg"), key='-AWG-')
+                    ]
+                ],
+                key='-MAIN COLUMN-'
+            )
+        ]
+    ]
     window_size= (1080,600)
 
     window = sg.Window('16 Channel Arbitrary Waveform Generator', main_layout, finalize=True, right_click_menu=sg.MENU_RIGHT_CLICK_EDITME_VER_EXIT, keep_on_top=False, use_custom_titlebar=use_custom_titlebar, size= window_size)
@@ -220,6 +236,13 @@ def set_preset_wave(wave):
     print(wave+" preset used.")
     send_serial_message("Preset "+wave+" set.\n")
 
+# Swapping From AWG to EIT and vice-versa
+def swap_eit_mode(mode):
+    print("Mode swapped!")
+    if mode == 0:
+        send_serial_message("Swapped to EIT mode\n")
+    else:
+        send_serial_message("Swapped to AWG mode\n")
 
 
 # Start of the program...
@@ -287,6 +310,7 @@ while True:
     if event == 'EIT':
         window[f'-AWG-'].update(visible=False)
         window[f'-EIT-'].update(visible=True)
+        swap_eit_mode(mode)
         mode=1
         menu_def_eit = [['File', ['Import', 'Export', 'Exit']],
                                 ['Tools', ['EIT ✓']],
@@ -296,7 +320,7 @@ while True:
     if event == 'EIT ✓':
         window[f'-EIT-'].update(visible=False)
         window[f'-AWG-'].update(visible=True)
-        
+        swap_eit_mode(mode)
 
         mode=0
         menu_def = [['File', ['Import', 'Export', 'Exit']],
