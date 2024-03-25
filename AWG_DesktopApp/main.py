@@ -94,9 +94,9 @@ def make_window(mode, theme=None):
                 ]
     
     #  Right side layout 
-    parameter_layout =[[name('Frequency'), sg.Spin(['0 Hz',], s=(15,2), k='-FREQUENCY-')],
-                       [name('Amplitude'), sg.Spin(['0 V',], s=(15,2), k='-AMPLITUDE-')],
-                       [name('Phase Shift'), sg.Spin(['0 °',], s=(15,2),k='-PHASE-')],
+    parameter_layout =[[name('Frequency(Hz)'), sg.Spin(['0',], s=(15,2), k='-FREQUENCY-')],
+                       [name('Amplitude(V)'), sg.Spin(['0',], s=(15,2), k='-AMPLITUDE-'),sg.Button('Set',expand_x=True, enable_events=True, k='-SETPARAMS-')],
+                       [name('Phase Shift(°)'), sg.Spin(['0',], s=(15,2),k='-PHASE-')],
                        #[name('Offset'), sg.Spin(['0 V',], s=(15,2))]
                        ]
     preset_layout =[[name('Presets'), sg.Combo(['Sine','Square','Triangle'], default_value='Sine', s=(15,22), enable_events=False, readonly=True, k='-PRESET-')],
@@ -119,7 +119,7 @@ def make_window(mode, theme=None):
                     [
                        sg.Column([[sg.Frame("Parameters",parameter_layout)]]),
                        sg.Column([[sg.Frame("Presets",preset_layout)]]),
-                       sg.Column([[sg.Frame("Function",function_layout,expand_y=True)]]),
+                     #  sg.Column([[sg.Frame("Function",function_layout,expand_y=True)]]),
                        sg.Column([[sg.Frame("On/Off",button_layout,expand_y=True)]])
                     ]
                  ]
@@ -144,12 +144,12 @@ def make_window(mode, theme=None):
     eit_window_layout = [ [sg.Menu([['File', ['Import','Export','Exit']], ['Tools', ['EIT', ]],['Help', ['User Manual', 'Basics']]],  k='-CUST MENUBAR-',p=0)],
               [ sg.Col(layout_eit,vertical_alignment='top')]]    
     
-    if mode=="eit":
-        main_layout=[eit_window_layout]
-    else:
-        main_layout=[layout]
+    
+    main_layout = [[sg.Column(eit_window_layout, visible = False, key = '-EIT-')],[sg.Column(layout, key = '-AWG-')]]
+    
+    window_size= (1080,600)
 
-    window = sg.Window('16 Channel Arbitrary Waveform Generator', main_layout, finalize=True, right_click_menu=sg.MENU_RIGHT_CLICK_EDITME_VER_EXIT, keep_on_top=False, use_custom_titlebar=use_custom_titlebar)
+    window = sg.Window('16 Channel Arbitrary Waveform Generator', main_layout, finalize=True, right_click_menu=sg.MENU_RIGHT_CLICK_EDITME_VER_EXIT, keep_on_top=False, use_custom_titlebar=use_custom_titlebar, size= window_size)
 
 
     return window
@@ -210,6 +210,18 @@ def change_channel(window):
         window['-SLIDER-'].update(value=1)
         window['-STATE-'].update('On')
 
+# Modification of the Parameters
+def change_params(amplitude, frequency, phase):
+    print("Parameters sent: ", amplitude,frequency, phase)
+    send_serial_message(str("Params of "+amplitude+","+frequency+","+phase+"\n"))
+    
+# Using a preset wave
+def set_preset_wave(wave):
+    print(wave+" preset used.")
+    send_serial_message("Preset "+wave+" set.\n")
+
+
+
 # Start of the program...
 
 
@@ -242,7 +254,8 @@ while True:
             window = make_window("awg")
         if event == '-SETPRESET-':
             use_preset = values['-PRESET-']
-            draw_graph(window['-GRAPH-'],use_preset)  
+            draw_graph(window['-GRAPH-'],use_preset)
+            set_preset_wave(use_preset) 
         if event == '-CHANNELNUM-':
             change_channel(window)
             #current_channel = values['-CHANNELNUM-']
@@ -263,23 +276,33 @@ while True:
                 window['-STATE-'].update('On')
                 window[f'-CIRCLE{channel_num}-'].update(text_color='green')
 
+        # Event for setting parameters
+        if event == '-SETPARAMS-': 
+            amplitude=window['-AMPLITUDE-'].get().strip(string.ascii_letters).strip()
+            frequency=window['-FREQUENCY-'].get().strip(string.ascii_letters).strip()
+            phase=window['-PHASE-'].get().strip(string.ascii_letters).strip()
+            change_params(amplitude,frequency,phase)
+   
+
     if event == 'EIT':
-        #window.close()
-        window=make_window("eit")
-       # mode=1
-        #menu_def_eit = [['File', ['Import', 'Export', 'Exit']],
-        #                        ['Tools', ['EIT ✓']],
-        #                        ['Help', ['User Manual', 'Basics']]]
-        #window['-CUST MENUBAR-'].update(menu_definition=menu_def_eit)      
-"""
+        window[f'-AWG-'].update(visible=False)
+        window[f'-EIT-'].update(visible=True)
+        mode=1
+        menu_def_eit = [['File', ['Import', 'Export', 'Exit']],
+                                ['Tools', ['EIT ✓']],
+                                ['Help', ['User Manual', 'Basics']]]
+        window['-CUST MENUBAR-'].update(menu_definition=menu_def_eit)    
+
     if event == 'EIT ✓':
-        window.close()
-        window=make_window("awg")
+        window[f'-EIT-'].update(visible=False)
+        window[f'-AWG-'].update(visible=True)
+        
+
         mode=0
         menu_def = [['File', ['Import', 'Export', 'Exit']],
                                 ['Tools', ['EIT']],
                                 ['Help', ['User Manual', 'Basics']]]
         window['-CUST MENUBAR-'].update(menu_definition=menu_def)  
-"""
+
 
 window.close()
