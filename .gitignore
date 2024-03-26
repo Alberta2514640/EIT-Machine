@@ -155,3 +155,6 @@ fp-info-cache
 # Exported BOM files
 *.xml
 *.csv
+
+# Visual Studio Code files
+.vscode
