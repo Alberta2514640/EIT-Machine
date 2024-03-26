@@ -11,7 +11,7 @@ import usb.core
 def send_serial_message(message):
     # Serial Connection Communication with the Raspberry
     # Open serial connection
-    ser = serial.Serial('COM5', 9600)  # Adjust the port as needed
+    ser = serial.Serial('COM4', 9600)  # Adjust the port as needed
 
     # Send a message
     #message = "Hello, Raspberry Pi Pico!\n"
@@ -26,7 +26,7 @@ def send_serial_message(message):
         data = ser.readline().decode().strip()
         if data:
             print("GUI Received:", data)
-            break 
+            break
     ser.close()
 
 channel_count = 16
@@ -49,9 +49,9 @@ mode=0
 def draw_axes(graph_element):
     # Define the graph size
     graph_size = (graph_size_x, graph_size_y)
-    
+
     # Define the time and voltage ranges
-    time_range_ms = 10  
+    time_range_ms = 10
     voltage_range_volts = 1.7
 
     # Draw X-axis with time in milliseconds
@@ -92,8 +92,8 @@ def make_window(mode, theme=None):
                # [ sg.Output(s=(15,2))],
                 #[ sg.Combo(sg.theme_list(), default_value=sg.theme(), s=(15,22), enable_events=True, readonly=True, k='-COMBO-')]
                 ]
-    
-    #  Right side layout 
+
+    #  Right side layout
     parameter_layout =[[name('Frequency(Hz)'), sg.Spin(['0',], s=(15,2), k='-FREQUENCY-')],
                        [name('Amplitude(V)'), sg.Spin(['0',], s=(15,2), k='-AMPLITUDE-'),sg.Button('Set',expand_x=True, enable_events=True, k='-SETPARAMS-')],
                        [name('Phase Shift(°)'), sg.Spin(['0',], s=(15,2),k='-PHASE-')],
@@ -101,13 +101,13 @@ def make_window(mode, theme=None):
                        ]
     preset_layout =[[name('Presets'), sg.Combo(['Sine','Square','Triangle'], default_value='Sine', s=(15,22), enable_events=False, readonly=True, k='-PRESET-')],
                        [sg.Button('Use',expand_x=True, enable_events=True, k='-SETPRESET-')],
-                       ]    
-    
+                       ]
+
     function_layout =[[name('Input/Output:'), sg.Combo(['Output','Input'], default_value='Output', s=(15,22), enable_events=False, readonly=True, k='-FUNCTION-')],
                       [name('Mode:'), sg.Combo(['DAC','ADC'], default_value='Output', s=(15,22), enable_events=False, readonly=True, k='-MODE-')]
                       #[sg.Push(),sg.Checkbox('EIT Mode')],
                        #[sg.Button('Set',expand_x=True, enable_events=True, k='-SETPRESET-')],
-                       ]    
+                       ]
 
     button_layout =[[sg.Slider(range=(0, 1), default_value=0, orientation='h', size=(8, 40), key='-SLIDER-', enable_events=True,tooltip='Toggle On/Off',disable_number_display=True),
 
@@ -136,15 +136,15 @@ def make_window(mode, theme=None):
 
 
     ###################
-    
+
     ### Window drawing ###
     layout = [ [sg.Menu([['File', ['Import','Export','Exit']], ['Tools', ['EIT', ]],['Help', ['User Manual', 'Basics']]],  k='-CUST MENUBAR-',p=0)],
               [sg.Col(layout_l,size=(None,None),expand_x=True, expand_y=True, pad=(0,0), ), sg.VSep(), sg.Col(layout_r,vertical_alignment='top')]]
-    
+
     eit_window_layout = [ [sg.Menu([['File', ['Import','Export','Exit']], ['Tools', ['EIT', ]],['Help', ['User Manual', 'Basics']]],  k='-CUST MENUBAR-',p=0)],
-              [ sg.Col(layout_eit,vertical_alignment='top')]]    
-    
-    
+              [ sg.Col(layout_eit,vertical_alignment='top')]]
+
+
    # main_layout = [[sg.Column(eit_window_layout, visible = False, key = '-EIT-')],[sg.Column(layout, key = '-AWG-')]]
     main_layout = [
         [
@@ -230,7 +230,7 @@ def change_channel(window):
 def change_params(amplitude, frequency, phase):
     print("Parameters sent: ", amplitude,frequency, phase)
     send_serial_message(str("Params of "+amplitude+","+frequency+","+phase+"\n"))
-    
+
 # Using a preset wave
 def set_preset_wave(wave):
     print(wave+" preset used.")
@@ -264,7 +264,7 @@ while True:
     if event == sg.WIN_CLOSED or event == 'Exit':
         break
     #if event != sg.WIN_CLOSED:  # Check if the event is not related to window closure
-    #    sg.popup(event, values) 
+    #    sg.popup(event, values)
 
     if mode == 0:
         ###if values['-COMBO-'] != sg.theme():
@@ -278,7 +278,7 @@ while True:
         if event == '-SETPRESET-':
             use_preset = values['-PRESET-']
             draw_graph(window['-GRAPH-'],use_preset)
-            set_preset_wave(use_preset) 
+            set_preset_wave(use_preset)
         if event == '-CHANNELNUM-':
             change_channel(window)
             #current_channel = values['-CHANNELNUM-']
@@ -289,7 +289,7 @@ while True:
             #call an update function in the future
 
         # Event for Channel On/Off
-        if event == '-SLIDER-': 
+        if event == '-SLIDER-':
             channel_num=window['-CHANNELTEXT-'].get().strip(string.ascii_letters).strip()
             slider_value = values['-SLIDER-']
             if slider_value == 0:
@@ -300,12 +300,12 @@ while True:
                 window[f'-CIRCLE{channel_num}-'].update(text_color='green')
 
         # Event for setting parameters
-        if event == '-SETPARAMS-': 
+        if event == '-SETPARAMS-':
             amplitude=window['-AMPLITUDE-'].get().strip(string.ascii_letters).strip()
             frequency=window['-FREQUENCY-'].get().strip(string.ascii_letters).strip()
             phase=window['-PHASE-'].get().strip(string.ascii_letters).strip()
             change_params(amplitude,frequency,phase)
-   
+
 
     if event == 'EIT':
         window[f'-AWG-'].update(visible=False)
@@ -315,7 +315,7 @@ while True:
         menu_def_eit = [['File', ['Import', 'Export', 'Exit']],
                                 ['Tools', ['EIT ✓']],
                                 ['Help', ['User Manual', 'Basics']]]
-        window['-CUST MENUBAR-'].update(menu_definition=menu_def_eit)    
+        window['-CUST MENUBAR-'].update(menu_definition=menu_def_eit)
 
     if event == 'EIT ✓':
         window[f'-EIT-'].update(visible=False)
@@ -326,7 +326,7 @@ while True:
         menu_def = [['File', ['Import', 'Export', 'Exit']],
                                 ['Tools', ['EIT']],
                                 ['Help', ['User Manual', 'Basics']]]
-        window['-CUST MENUBAR-'].update(menu_definition=menu_def)  
+        window['-CUST MENUBAR-'].update(menu_definition=menu_def)
 
 
 window.close()
