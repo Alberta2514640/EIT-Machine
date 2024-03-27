@@ -95,19 +95,26 @@ while False:
 # DEBUG
 # GP6 will be our temporary test pin
 # Clear intermediate register by clocking the shift register during a shift register clear
-TEST_PIN = digitalio.DigitalInOut(GP6)
-TEST_PIN.switch_to_input(pull=digitalio.Pull.DOWN)
+# TEST_PIN = digitalio.DigitalInOut(GP6)
+# TEST_PIN.switch_to_input(pull=digitalio.Pull.DOWN)
 # The SPI transfers are broken up by 8-bit word.
 # The MSB ends up being QH, while the LSB ends up being QA.
-sn74hc595.sr_update (SPI_SR, lSR_CLR, lSR_OE, 15, 15, 15, 15)
-
-while True:
-    time.sleep(0.05)
-    if TEST_PIN.value:
-        print ("!!!")
-    else:
-        print ("...")
-
+# sn74hc595.sr_update (SPI_SR, lSR_CLR, lSR_OE, 15, 15, 15, 15)
+#
+# outbuffer = bytearray(3)
+# outbuffer[0] = 0x01
+# outbuffer[1] = 0x23
+# outbuffer[2] = 0x40
+# Reconstruct a 16-bit word, stripping the leading and trailing zeroes.
+# outval = ((outbuffer[0] & 0x0F)) << 12 | (outbuffer[1] << 4) | ((outbuffer[2] & 0xF0) >> 4)
+# print(outval)
+#
+# while False:
+    # if TEST_PIN.value:
+        # print ("!!!")
+    # else:
+        # print ("...")
+#
 # TODO
 
 # AD9512
@@ -120,6 +127,3 @@ while True:
 
 # EIT
 # Write function that implements EIT
-
-# AD7680
-# Write function that takes a one-shot ADC reading
