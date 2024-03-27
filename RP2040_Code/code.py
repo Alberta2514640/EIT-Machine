@@ -36,25 +36,29 @@ lADC_CS    = digitalio.DigitalInOut(GP25)  # (GP25) AD7680 (ADC)
 lCLKBUF_CS = digitalio.DigitalInOut(GP9 )  # (GP9 ) AD9512 (Clock Divider)
 
 for pin in [ lSR_CLR, lSR_OE, lDDS_SYNC, lAMP_PD, lEIT_PD,
-            lDDS1_CS, lDDS2_CS, lDDS3_CS, lDDS4_CS, lADC_CS, lCLKBUF_CS, ]:
+            lDDS1_CS, lDDS2_CS, lDDS3_CS, lDDS4_CS, lADC_CS, lCLKBUF_CS]:
     pin.switch_to_output(True, digitalio.DriveMode.PUSH_PULL)
-pin.switch_to_output(False, digitalio.DriveMode.PUSH_PULL)
+MUX_EN.switch_to_output(False, digitalio.DriveMode.PUSH_PULL)
 
 # Set up SPI interfaces (SCLK, MOSI, MISO)
 # The CircuitPython SPIDevice library doesn't seem to work yet,
 # meaning that we'll have to manage the locks ourselves.
 SPI0 = busio.SPI(GP2, GP3, GP0)  # SPI 0
 SPI1 = busio.SPI(GP10, GP11, GP8)  # SPI 1
+SPI_SR = bitbangio.SPI(GP14, GP15, None)
 
 SPI0.try_lock()
 SPI1.try_lock()
+SPI_SR.try_lock()
 
 # All of our SPI devices fortunately use SPI mode 0.
 SPI0.configure(baudrate=7812500, polarity=0, phase=0, bits=8)  # Highest supported baud rate on this port
 SPI1.configure(baudrate=7812500, polarity=0, phase=0, bits=8)
-
+SPI_SR.configure(baudrate=9600, polarity=0, phase=0, bits=9) # NOTE! Some baud rates here cause the Pico to enter an unrecoverable state!
+                                                             # We need a 9th bit here because we must cycle the device one extra time.
 SPI0.unlock()
 SPI1.unlock()
+SPI_SR.unlock()
 
 # Start sending out a clock on uC_CLKOUT (GP23, PIO)
 # The maximum clock we can use is theoretically 62.5 MHz
@@ -87,22 +91,18 @@ while False:
             exec(command)
         except Exception as err:
             traceback.print_exception(err)
+
 # DEBUG
 # GP6 will be our temporary test pin
+# Clear intermediate register by clocking the shift register during a shift register clear
 TEST_PIN = digitalio.DigitalInOut(GP6)
 TEST_PIN.switch_to_input(pull=digitalio.Pull.DOWN)
-TEST_ARR = bytearray(2)
-lSR_CLR.value = False
-time.sleep(0.1)
-lSR_CLR.value = True
-
-TEST_ARR[0] = 0x55
-TEST_ARR[1] = 0x55
-
-sn74hc595.sr_write(len=2, inputbuffer=TEST_ARR)
+# The SPI transfers are broken up by 8-bit word.
+# The MSB ends up being QH, while the LSB ends up being QA.
+sn74hc595.sr_update (SPI_SR, lSR_CLR, lSR_OE, 15, 15, 15, 15)
 
 while True:
-    time.sleep(0.5)
+    time.sleep(0.05)
     if TEST_PIN.value:
         print ("!!!")
     else:
@@ -120,13 +120,6 @@ while True:
 
 # EIT
 # Write function that implements EIT
-
-# SN74HC595
-# Write function that updates the SN74HC595
-
-# User SPI
-# Write function that implements a SPI write of x bytes
-# Write function that reads a register
 
 # AD7680
 # Write function that takes a one-shot ADC reading
