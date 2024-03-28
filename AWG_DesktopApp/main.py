@@ -141,13 +141,15 @@ def make_window(mode, theme=None):
                        [sg.Push(),sg.Text('Distance Between Electrodes (m) :',font='Courier 10'), sg.Spin(['0',], s=(15,2), k='-ELECTRODESD-')],
                        [sg.Push(),sg.Text('Amplitude (V) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-AMPLITUDE2-')],
                        [sg.Push(),sg.Text('Frequency of Injected Current (Hz) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-FREQUENCY2-')],
-                       [sg.Push(),sg.Text('Voltage Out (V) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-VOLTAGEOUT-')]]
+                       [sg.Push(),sg.Text('Voltage Out (V) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-VOLTAGEOUT-')],
+                       [sg.Button('Submit',expand_x=True, enable_events=True, k='-SUBMITEIT-')]
+                       ]
     layout_eit = [
                     [
                         sg.Column([
                             [sg.Text('Electrical Impedance Tomography (EIT)',font='Courier 16')],
                             [sg.Column([[sg.Frame("Parameters",layout_eit_parameters)]])],
-                            [sg.Frame("",[[sg.Graph((600,600),(0,600),(600,0),background_color='white',border_width=1)]])]
+                            [sg.Frame("",[[sg.Graph((450,450),(0,450),(450,0),background_color='white',border_width=1)]])]
                         ],element_justification='center')
                     ]
                   ]
