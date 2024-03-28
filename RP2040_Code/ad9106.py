@@ -1,10 +1,15 @@
 # Functions for interacting with Analog Devices AD9106 direct digital synthesis (DDS) ICs.
 
-import time
-
 # Startup procedure
 def init():
-    time.sleep(1)
+    pass
+
+# Serial control format:
+# All SPI transactions on the AD9106 are preceded by a 16-bit control word.
+# 15: Read/Write Bit (0 Write, 1 Read) | 14-0: 15-Bit Register Base Address
+# Subsequent read/write operations to the AD9106 SPI port are auto-incrementing in register space, and auto-decrementing in SRAM space.
+# SRAM Space occupies 0x6000 - 0x6FFF.
+# Register updates are stored in shadow registers until they are written to register memory by setting the self-clearing RAMUPDATE register (0x1D).
 
 # Channel power up
 
