@@ -137,11 +137,11 @@ def make_window(mode, theme=None):
                  [sg.Frame("Waveform",frame_layout)]]
     #############################################
     ### EIT Layout ###
-    layout_eit_parameters = [[sg.Push(),sg.Text('Electrodes :',font='Courier 10'), sg.Spin(['0 Hz',], s=(15,2), k='-ELECTRODES-')],
-                       [sg.Push(),sg.Text('Distance Between Electrodes :',font='Courier 10'), sg.Spin(['0 V',], s=(15,2), k='-ELECTRODESD-')],
-                       [sg.Push(),sg.Text('Amplitude :',font='Courier 10'), sg.Spin(['0 °',], s=(15,2),k='-AMPLITUDE2-')],
-                       [sg.Push(),sg.Text('Frequency of Injected Current :',font='Courier 10'), sg.Spin(['0 °',], s=(15,2),k='-FREQUENCY2-')],
-                       [sg.Push(),sg.Text('Voltage Out :',font='Courier 10'), sg.Spin(['0 °',], s=(15,2),k='-VOLTAGEOUT-')]]
+    layout_eit_parameters = [[sg.Push(),sg.Text('Electrodes :',font='Courier 10'), sg.Spin(['0',], s=(15,2), k='-ELECTRODES-')],
+                       [sg.Push(),sg.Text('Distance Between Electrodes (m) :',font='Courier 10'), sg.Spin(['0',], s=(15,2), k='-ELECTRODESD-')],
+                       [sg.Push(),sg.Text('Amplitude (V) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-AMPLITUDE2-')],
+                       [sg.Push(),sg.Text('Frequency of Injected Current (Hz) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-FREQUENCY2-')],
+                       [sg.Push(),sg.Text('Voltage Out (V) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-VOLTAGEOUT-')]]
     layout_eit = [
                     [
                         sg.Column([
