@@ -82,7 +82,7 @@ def make_window(mode, theme=None):
     NAME_SIZE = 16
 
     def name(name):
-        return sg.Text(name + ' ' + ':', size=(NAME_SIZE,1), justification='r',pad=(0,0), font='Courier 10')
+        return sg.Text(name + ' ' + ':', size=(NAME_SIZE,1), justification='left',pad=(0,0), font='Courier 10')
 
     sg.theme(theme)
 
@@ -100,9 +100,9 @@ def make_window(mode, theme=None):
                 ]
 
     #  Right side layout
-    parameter_layout =[[name('Frequency(Hz)'), sg.Spin(['0',], s=(15,2), k='-FREQUENCY-')],
-                       [name('Amplitude(V)'), sg.Spin(['0',], s=(15,2), k='-AMPLITUDE-'),sg.Button('Set',expand_x=True, enable_events=True, k='-SETPARAMS-')],
-                       [name('Phase Shift(°)'), sg.Spin(['0',], s=(15,2),k='-PHASE-')],
+    parameter_layout =[[name('Frequency(Hz)'), sg.Spin([round(i * 0.1, 1) for i in range(0, 120)],initial_value=0.0, s=(15,2), k='-FREQUENCY-', enable_events=True)],
+                       [name('Amplitude(V)'), sg.Spin([round(i * 0.1, 1) for i in range(-37, 38)],initial_value=0.0, s=(15,2), k='-AMPLITUDE-'),sg.Button('Set',expand_x=True, enable_events=True, k='-SETPARAMS-')],
+                       [name('Phase Shift(°)'), sg.Spin([round(i * 0.1, 1) for i in range(-37, 38)],initial_value=0.0, s=(15,2),k='-PHASE-')],
                        #[name('Offset'), sg.Spin(['0 V',], s=(15,2))]
                        ]
     # Layout that contains the presets for the waves
@@ -137,13 +137,20 @@ def make_window(mode, theme=None):
                  [sg.Frame("Waveform",frame_layout)]]
     #############################################
     ### EIT Layout ###
-    layout_eit = [[name('Electrodes'), sg.Spin(['0 Hz',], s=(15,2), k='-ELECTRODES-')],
-                       [name('Distance Between Electrodes'), sg.Spin(['0 V',], s=(15,2), k='-ELECTRODESD-')],
-                       [name('Amplitude'), sg.Spin(['0 °',], s=(15,2),k='-AMPLITUDE2-')],
-                       [name('Frequency of Injected Current'), sg.Spin(['0 °',], s=(15,2),k='-FREQUENCY2-')],
-                       [name('Voltage Out'), sg.Spin(['0 °',], s=(15,2),k='-VOLTAGEOUT-')]]
-
-
+    layout_eit_parameters = [[sg.Push(),sg.Text('Electrodes :',font='Courier 10'), sg.Spin(['0 Hz',], s=(15,2), k='-ELECTRODES-')],
+                       [sg.Push(),sg.Text('Distance Between Electrodes :',font='Courier 10'), sg.Spin(['0 V',], s=(15,2), k='-ELECTRODESD-')],
+                       [sg.Push(),sg.Text('Amplitude :',font='Courier 10'), sg.Spin(['0 °',], s=(15,2),k='-AMPLITUDE2-')],
+                       [sg.Push(),sg.Text('Frequency of Injected Current :',font='Courier 10'), sg.Spin(['0 °',], s=(15,2),k='-FREQUENCY2-')],
+                       [sg.Push(),sg.Text('Voltage Out :',font='Courier 10'), sg.Spin(['0 °',], s=(15,2),k='-VOLTAGEOUT-')]]
+    layout_eit = [
+                    [
+                        sg.Column([
+                            [sg.Text('Electrical Impedance Tomography (EIT)',font='Courier 16')],
+                            [sg.Column([[sg.Frame("Parameters",layout_eit_parameters)]])],
+                            [sg.Frame("",[[sg.Graph((600,600),(0,600),(600,0),background_color='white',border_width=1)]])]
+                        ],element_justification='center')
+                    ]
+                  ]
 
     ###################
 
@@ -168,13 +175,13 @@ def make_window(mode, theme=None):
                         sg.Column(layout, visible=(mode == "awg"), key='-AWG-')
                     ]
                 ],
-                key='-MAIN COLUMN-'
+                key='-MAIN COLUMN-', justification= 'center'
             )
         ]
     ]
     window_size= (1080,600)
 
-    window = sg.Window('16 Channel Arbitrary Waveform Generator', main_layout, finalize=True, right_click_menu=sg.MENU_RIGHT_CLICK_EDITME_VER_EXIT, keep_on_top=False, use_custom_titlebar=use_custom_titlebar, size= window_size)
+    window = sg.Window('16 Channel Arbitrary Waveform Generator', main_layout, finalize=True,  keep_on_top=False, use_custom_titlebar=use_custom_titlebar, size= window_size)
 
 
     return window
@@ -237,8 +244,9 @@ def change_channel(window):
 
 # Modification of the Parameters
 def change_params(amplitude, frequency, phase):
+    #TODO: Exception checking for parameters
     print("Parameters sent: ", amplitude,frequency, phase)
-    send_serial_message(str("Params of "+amplitude+","+frequency+","+phase+"\n"))
+    send_serial_message(str("Params of "+str(amplitude)+","+str(frequency)+","+str(phase)+"\n"))
 
 # Using a preset wave
 def set_preset_wave(wave):
@@ -271,7 +279,7 @@ while True:
     event, values = window.read()
     if event == sg.WIN_CLOSED or event == 'Exit':
         break
-    # If mode is in AWG Mode
+    # Events for when mode is in AWG Mode
     if mode == 0:
         # Event for setting a Preset Wave
         if event == '-SETPRESET-':
@@ -300,11 +308,25 @@ while True:
 
         # Event for setting parameters
         if event == '-SETPARAMS-':
-            amplitude=window['-AMPLITUDE-'].get().strip(string.ascii_letters).strip()
-            frequency=window['-FREQUENCY-'].get().strip(string.ascii_letters).strip()
-            phase=window['-PHASE-'].get().strip(string.ascii_letters).strip()
-            change_params(amplitude,frequency,phase)
+            try:
+                amplitude_input=window['-AMPLITUDE-'].get()
+                frequency_input=window['-FREQUENCY-'].get()
+                phase_input=window['-PHASE-'].get()
 
+                amplitude = float(amplitude_input)#.strip(string.ascii_letters).strip()
+                frequency = float(frequency_input)#.strip(string.ascii_letters).strip()
+                phase = float(phase_input)#.strip(string.ascii_letters).strip()
+            except Exception as e:
+                #TODO: Popup for invalid input
+                print("Invalid Input:", e)
+            finally:
+                try:
+                    change_params(amplitude,frequency,phase)
+                except NameError:
+                    pass # parameters were not set
+
+    #TODO: Events for EIT mode
+             
     # Swap to EIT Mode
     if event == 'EIT':
         window['-AWG-'].update(visible=False)
