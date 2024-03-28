@@ -1,12 +1,31 @@
 import PySimpleGUI as sg
 import math
 import string
-
 #do pip install pyserial, pyusb and pytime
 import serial.tools.list_ports
 import time
 
 
+# Global Variables
+channel_count = 16
+channel_list = [f"Channel {i}" for i in range(1,channel_count+1)]
+#variables for keeping track of channel parameters and status
+channel_frequencies = [f"{i} Hz" for i in range(1,channel_count+1)]
+channel_amplitude = [f"{i} V" for i in range(1,channel_count+1)]
+channel_phase = [f"{i} °" for i in range(1,channel_count+1)]
+channel_status= [0 for _ in range(1,channel_count+1)]
+
+graph_size_x=900
+graph_size_y=375
+
+
+current_channel="Channel 1"
+use_custom_titlebar = False
+mode=0
+
+# send_serial_message(message)
+# Function for sending serial commands
+# takes in a message for sending over serial to the RP2040
 def send_serial_message(message):
     try:
         # Serial Connection Communication with the Raspberry
@@ -37,23 +56,9 @@ def send_serial_message(message):
         except NameError:
             pass  # ser variable might not be defined if an exception occurred before opening the connection
 
-channel_count = 16
-channel_list = [f"Channel {i}" for i in range(1,channel_count+1)]
-#add a variable for keeping track of channel parameters and status
-channel_frequencies = [f"{i} Hz" for i in range(1,channel_count+1)]
-channel_amplitude = [f"{i} V" for i in range(1,channel_count+1)]
-channel_phase = [f"{i} °" for i in range(1,channel_count+1)]
-channel_status= [0 for _ in range(1,channel_count+1)]
-
-graph_size_x=900
-graph_size_y=375
-
-
-current_channel="Channel 1"
-use_custom_titlebar = False
-# add variables for default values for parameters
-mode=0
-
+# draw_axes(graph_element)
+# Function for drawing the axes in the Graph element of the GUI
+# Takes in the Graph, to apply the changes
 def draw_axes(graph_element):
     # Define the graph size
     graph_size = (graph_size_x, graph_size_y)
@@ -76,11 +81,15 @@ def draw_axes(graph_element):
     graph_element.draw_text(f'{voltage_range_volts}V', (10, graph_size[1] - 20), color='black')
     graph_element.draw_text(f'-{voltage_range_volts}V', (10, 40), color='black')
 
-
-def make_window(mode, theme=None):
+# make_window()
+# This function draws the window using the layouts 
+# returns the window to be drawn
+def make_window(theme=None):
 
     NAME_SIZE = 16
-
+    # name(name)
+    # Creates a pySimpleGUI Text element and populates it with given text
+    # takes in a string value to add to the text element
     def name(name):
         return sg.Text(name + ' ' + ':', size=(NAME_SIZE,1), justification='left',pad=(0,0), font='Courier 10')
 
@@ -188,6 +197,12 @@ def make_window(mode, theme=None):
 
     return window
 
+
+
+# draw_sine_wave(graph_element)
+# Function for drawing a preset sine wave in the Graph element of the GUI
+# Takes in the Graph, to apply the changes
+# TODO: take in parameters to change the sine wave
 def draw_sine_wave(graph_element):
     graph_size = (graph_size_x, graph_size_y)
 
@@ -204,6 +219,9 @@ def draw_sine_wave(graph_element):
     for i in range(len(points) - 1):
         graph_element.draw_line(points[i], points[i + 1], color='blue')
 
+# draw_graph(graph_element,preset)
+# Function for drawing in the graph element of the GUI
+# Takes in the graph element to be modified, and the preset wave as a string to draw
 def draw_graph(graph_element,preset):
     if preset == 'Sine':
         draw_sine_wave(graph_element)
@@ -213,7 +231,11 @@ def draw_graph(graph_element,preset):
 
 
 
-#
+# change_channel(window)
+# This function handles all events for when a channel is changes
+# Includes saving the current parameters and calling the function for sending a serial message
+# and then retrieving the parameters for the channel that was switched to.
+# takes in the window to access the elements
 def change_channel(window):
     #Save the current parameters
     prev_channel=window['-CHANNELTEXT-'].get()
@@ -244,18 +266,24 @@ def change_channel(window):
         window['-SLIDER-'].update(value=1)
         window['-STATE-'].update('On')
 
-# Modification of the Parameters
+# change_params(amplitude, frequency, phase)
+# This handles the modification of the Parameters being sent to the RP2040
+# Takes in the amplitude, frequency and phase as floats.
 def change_params(amplitude, frequency, phase):
     #TODO: Exception checking for parameters
     print("Parameters sent: ", amplitude,frequency, phase)
     send_serial_message(str("Params of "+str(amplitude)+","+str(frequency)+","+str(phase)+"\n"))
 
-# Using a preset wave
+# set_preset_wave(wave)
+# Function for when a preset wave is set
+# Takes in the wave to be sent to the RP2040
 def set_preset_wave(wave):
     print(wave+" preset used.")
     send_serial_message("Preset "+wave+" set.\n")
 
-# Swapping From AWG to EIT and vice-versa
+# swap_eit_mode(mode)
+# handles swapping From AWG to EIT and vice-versa
+# Sends the Change to the RP2040
 def swap_eit_mode(mode):
     print("Mode swapped!")
     if mode == 0:
@@ -269,7 +297,7 @@ def swap_eit_mode(mode):
 
 
 
-window = make_window("awg")
+window = make_window()
 
 graph = window['-GRAPH-']  # Accessing the Graph element
 
