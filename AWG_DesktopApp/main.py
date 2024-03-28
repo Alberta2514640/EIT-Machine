@@ -5,29 +5,37 @@ import string
 #do pip install pyserial, pyusb and pytime
 import serial.tools.list_ports
 import time
-import usb.core
 
 
 def send_serial_message(message):
-    # Serial Connection Communication with the Raspberry
-    # Open serial connection
-    ser = serial.Serial('COM4', 9600)  # Adjust the port as needed
+    try:
+        # Serial Connection Communication with the Raspberry
+        # Open serial connection
+        ser = serial.Serial('COM4', 9600)  # Adjust the port as needed
 
-    # Send a message
-    #message = "Hello, Raspberry Pi Pico!\n"
-    ser.write(message.encode())
+        # Send a message
+        #message = "Hello, Raspberry Pi Pico!\n"
+        ser.write(message.encode())
 
-    timeout_seconds = 5  # Set timeout to 5 seconds
-    start_time = time.time()  # Get current time
-    while True:
-        if time.time() - start_time > timeout_seconds:
-            print("Timeout: No response from Raspberry Pi.")
-            break  # Exit loop if timeout is reached
-        data = ser.readline().decode().strip()
-        if data:
-            print("GUI Received:", data)
-            break
-    ser.close()
+        timeout_seconds = 5  # Set timeout to 5 seconds
+        start_time = time.time()  # Get current time
+        while True:
+            if time.time() - start_time > timeout_seconds:
+                print("Timeout: No response from Raspberry Pi.")
+                break  # Exit loop if timeout is reached
+            data = ser.readline().decode().strip()
+            if data:
+                print("GUI Received:", data)
+                break
+    except serial.SerialException as e:
+        print("Serial communication error:", e)
+    except Exception as e:
+        print("An error occurred:", e)
+    finally:
+        try:
+            ser.close()  # Close the serial connection
+        except NameError:
+            pass  # ser variable might not be defined if an exception occurred before opening the connection
 
 channel_count = 16
 channel_list = [f"Channel {i}" for i in range(1,channel_count+1)]
@@ -74,15 +82,13 @@ def make_window(mode, theme=None):
     NAME_SIZE = 16
 
     def name(name):
-        #dots = NAME_SIZE-len(name)-2
         return sg.Text(name + ' ' + ':', size=(NAME_SIZE,1), justification='r',pad=(0,0), font='Courier 10')
-        #return sg.Text(name + ' ' + '•'*dots, size=(NAME_SIZE,1), justification='r',pad=(0,0), font='Courier 10')
 
     sg.theme(theme)
 
     # Layouts
-    # This is the left side layout
     ##### Standard Waveform Generator Layout
+    # This is the left side layout that includes the statuses of all the channels
     layout_l = [[ sg.Text('Status',font='Courier 16')],
                 [ sg.HSep()],
                 #[ sg.Text('Channel 1',font='Courier 10')],
@@ -99,22 +105,25 @@ def make_window(mode, theme=None):
                        [name('Phase Shift(°)'), sg.Spin(['0',], s=(15,2),k='-PHASE-')],
                        #[name('Offset'), sg.Spin(['0 V',], s=(15,2))]
                        ]
+    # Layout that contains the presets for the waves
     preset_layout =[[name('Presets'), sg.Combo(['Sine','Square','Triangle'], default_value='Sine', s=(15,22), enable_events=False, readonly=True, k='-PRESET-')],
                        [sg.Button('Use',expand_x=True, enable_events=True, k='-SETPRESET-')],
                        ]
 
+    ## Layout for determining the Input/Output and Mode of the AWG
     function_layout =[[name('Input/Output:'), sg.Combo(['Output','Input'], default_value='Output', s=(15,22), enable_events=False, readonly=True, k='-FUNCTION-')],
                       [name('Mode:'), sg.Combo(['DAC','ADC'], default_value='Output', s=(15,22), enable_events=False, readonly=True, k='-MODE-')]
                       #[sg.Push(),sg.Checkbox('EIT Mode')],
                        #[sg.Button('Set',expand_x=True, enable_events=True, k='-SETPRESET-')],
                        ]
-
+    ## The layout that includes the ON/OFF slider button
     button_layout =[[sg.Slider(range=(0, 1), default_value=0, orientation='h', size=(8, 40), key='-SLIDER-', enable_events=True,tooltip='Toggle On/Off',disable_number_display=True),
 
                         ],
                         [sg.Text('State: '), sg.Text('Off', size=(5,1), key='-STATE-'),]
                 ]
 
+    ## This is the layout for the parameter and channel control; Includes Parameter layout, preset layout and On/Off layout
     frame_layout = [[sg.Graph((graph_size_x+80, graph_size_y+20), (0,20), (graph_size_x,graph_size_y),background_color='white', k='-GRAPH-')],
                     [
                        sg.Column([[sg.Frame("Parameters",parameter_layout)]]),
@@ -123,6 +132,7 @@ def make_window(mode, theme=None):
                        sg.Column([[sg.Frame("On/Off",button_layout,expand_y=True)]])
                     ]
                  ]
+    ## Layout for the right side of the Interface; Includes the Graph, Channel name and all the parameter controls
     layout_r  = [[sg.Text(current_channel, k='-CHANNELTEXT-'),sg.Push(),sg.Combo(channel_list, default_value=current_channel, size=(15,22), enable_events=True, readonly=True, k='-CHANNELNUM-',)],
                  [sg.Frame("Waveform",frame_layout)]]
     #############################################
@@ -145,7 +155,6 @@ def make_window(mode, theme=None):
               [ sg.Col(layout_eit,vertical_alignment='top')]]
 
 
-   # main_layout = [[sg.Column(eit_window_layout, visible = False, key = '-EIT-')],[sg.Column(layout, key = '-AWG-')]]
     main_layout = [
         [
             sg.Menu([['File', ['Import', 'Export', 'Exit']], ['Tools', ['EIT']], ['Help', ['User Manual', 'Basics']]],
@@ -260,38 +269,28 @@ if graph:  # Checking if the Graph element is present
 
 while True:
     event, values = window.read()
-   # sg.popup(event, values)                     # show the results of the read in a popup Window
     if event == sg.WIN_CLOSED or event == 'Exit':
         break
-    #if event != sg.WIN_CLOSED:  # Check if the event is not related to window closure
-    #    sg.popup(event, values)
-
+    # If mode is in AWG Mode
     if mode == 0:
-        ###if values['-COMBO-'] != sg.theme():
-        ###    sg.theme(values['-COMBO-'])
-        ###    window.close()
-        ###    window = make_window("awg")
-        if event == '-USE CUSTOM TITLEBAR-':
-            use_custom_titlebar = values['-USE CUSTOM TITLEBAR-']
-            window.close()
-            window = make_window("awg")
+        # Event for setting a Preset Wave
         if event == '-SETPRESET-':
             use_preset = values['-PRESET-']
             draw_graph(window['-GRAPH-'],use_preset)
             set_preset_wave(use_preset)
+        # Event for Changing Channel
         if event == '-CHANNELNUM-':
             change_channel(window)
-            #current_channel = values['-CHANNELNUM-']
-            #window['-CHANNELTEXT-'].update(str(current_channel))
             window['-GRAPH-'].erase()
             graph = window['-GRAPH-']
             draw_axes(graph)
-            #call an update function in the future
+            #TODO: call an update function in the future for the graph
 
         # Event for Channel On/Off
         if event == '-SLIDER-':
             channel_num=window['-CHANNELTEXT-'].get().strip(string.ascii_letters).strip()
             slider_value = values['-SLIDER-']
+            # 
             if slider_value == 0:
                 window['-STATE-'].update('Off')
                 window[f'-CIRCLE{channel_num}-'].update(text_color='red')
@@ -306,10 +305,10 @@ while True:
             phase=window['-PHASE-'].get().strip(string.ascii_letters).strip()
             change_params(amplitude,frequency,phase)
 
-
+    # Swap to EIT Mode
     if event == 'EIT':
-        window[f'-AWG-'].update(visible=False)
-        window[f'-EIT-'].update(visible=True)
+        window['-AWG-'].update(visible=False)
+        window['-EIT-'].update(visible=True)
         swap_eit_mode(mode)
         mode=1
         menu_def_eit = [['File', ['Import', 'Export', 'Exit']],
@@ -317,9 +316,10 @@ while True:
                                 ['Help', ['User Manual', 'Basics']]]
         window['-CUST MENUBAR-'].update(menu_definition=menu_def_eit)
 
+    # Swapping back to AWG Mode
     if event == 'EIT ✓':
-        window[f'-EIT-'].update(visible=False)
-        window[f'-AWG-'].update(visible=True)
+        window['-EIT-'].update(visible=False)
+        window['-AWG-'].update(visible=True)
         swap_eit_mode(mode)
 
         mode=0
