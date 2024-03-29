@@ -9,6 +9,7 @@
 # Configures the amps and DDSes for EIT mode.
 # Start to generate 50 kHz sine on HDR1 and prompt user to flip EIT switch.
 # Parses the list of pairs for generation and measurement.
+  # ^ This comes from the pyEIT protocol object. Alternatively, we can just hardcode them here.
 # Set up an object that will hold all the measured values in order.
 # (Some kind of way to interrupt infinite loop of EIT mode by USB)
 # Loop through the generation pairs

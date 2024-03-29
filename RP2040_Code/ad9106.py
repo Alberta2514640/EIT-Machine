@@ -1,21 +1,35 @@
-# Functions for interacting with Analog Devices AD9106 direct digital synthesis (DDS) ICs.
+# Functions for interacting with Analog Devices AD9106 direct digital synthesis (DDS) ICs, that implement the AWG mode of the 16CH_EIT.
+
+import digitalio
 
 # Startup procedure
-def init():
+def init(trigger:digitalio.DigitalInOut, dds1_cs:digitalio.DigitalInOut, dds2_cs:digitalio.DigitalInOut, dds3_cs:digitalio.DigitalInOut, dds4_cs:digitalio.DigitalInOut):
+    for cs in dds1_cs: #, dds2_cs, dds3_cs, dds4_cs: # Skip these since they're not populated on the prototype board
+        # Raise trigger line to stop any pattern generation.
+        # Set initialized non-default settings
+        # Update SPI
+        #
+        pass
     pass
 
 # Serial control format:
 # All SPI transactions on the AD9106 are preceded by a 16-bit control word.
 # 15: Read/Write Bit (0 Write, 1 Read) | 14-0: 15-Bit Register Base Address
+
 # Subsequent read/write operations to the AD9106 SPI port are auto-incrementing in register space, and auto-decrementing in SRAM space.
-# SRAM Space occupies 0x6000 - 0x6FFF.
 # Register updates are stored in shadow registers until they are written to register memory by setting the self-clearing RAMUPDATE register (0x1D).
+# SRAM Space occupies 0x6000 - 0x6FFF. SRAM updates are reflected immediately, but data is only written as long as pattern generation is off (RUN = 0)
 
-# Channel power up
+# Top-level function that is called by the GUI to change AWG attributes.
+# Individually calls other functions to adjust individual channel attributes
 
-# Channel power down
+# Helper function that determines which DDS chip to send to
 
-# Channel configuration
+# Turn on/off channel
+
+# Adjust channel (amplitude, frequency, phase, wave type)
+# Adjusting any of these attributes requires rewriting to the SRAM and registers.
+# To save effort in adjusting these manually, we'll just do blanket changes since change time is not critical.
 
 # Register Map
 
@@ -81,4 +95,4 @@ def init():
 
 # 0x60 CFG ERROR
 
-# 0x6000 to 0x6FFF SRAM DATA
+# 0x6000 to 0x6FFF SRAM DATA (4096 total samples. Each 12-bit sample occupies the top 12 MSBs of the 16-bit register, the 4 LSbs are reserved.)

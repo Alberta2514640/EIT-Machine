@@ -1,4 +1,5 @@
 import time
+import array
 import busio
 import rp2pio
 import digitalio
@@ -11,7 +12,7 @@ from adafruit_bus_device import spi_device
 from board import *
 
 # User drivers
-import awg
+# import awg
 import eit
 import ad9512
 import ad9106
@@ -19,19 +20,23 @@ import ad7680
 import sn74hc595
 import user_spi
 
+# Serial port helper functions
+
+# Initialization code:
+
 # Misc. Control Signals
 lSR_CLR   = digitalio.DigitalInOut(GP12)  # (GP12) ~SR_CLR
 lSR_OE    = digitalio.DigitalInOut(GP13)  # (GP13) ~SR_OE
-lDDS_SYNC = digitalio.DigitalInOut(GP16)  # (GP16) ~DDS SYNC
-lAMP_PD   = digitalio.DigitalInOut(GP18)  # (GP18) ~AMP PD
-lEIT_PD   = digitalio.DigitalInOut(GP19)  # (GP19) ~EIT PD
+lDDS_SYNC = digitalio.DigitalInOut(GP16)  # (GP16) ~DDS SYNC (Trigger)
+lAMP_PD   = digitalio.DigitalInOut(GP18)  # (GP18) ~AMP PD (PD for all channels except for channel 1)
+lEIT_PD   = digitalio.DigitalInOut(GP19)  # (GP19) ~EIT PD (PD for channel 1)
 MUX_EN    = digitalio.DigitalInOut(GP20)  # (GP20) MUX EN
 
 # SPI chip selects
 lDDS1_CS   = digitalio.DigitalInOut(GP1 )  # (GP1 ) AD9106 #1 (DDS 1)
-lDDS2_CS   = digitalio.DigitalInOut(GP5 )  # (GP5 ) AD9106 #2 (DDS 2)
-lDDS3_CS   = digitalio.DigitalInOut(GP17)  # (GP17) AD9106 #3 (DDS 3)
-lDDS4_CS   = digitalio.DigitalInOut(GP21)  # (GP21) AD9106 #4 (DDS 4)
+lDDS2_CS   = digitalio.DigitalInOut(GP5 )  # (GP5 ) AD9106 #2 (DDS 2) (Not populated on prototype board)
+lDDS3_CS   = digitalio.DigitalInOut(GP17)  # (GP17) AD9106 #3 (DDS 3) (Not populated on prototype board)
+lDDS4_CS   = digitalio.DigitalInOut(GP21)  # (GP21) AD9106 #4 (DDS 4) (Not populated on prototype board)
 lADC_CS    = digitalio.DigitalInOut(GP25)  # (GP25) AD7680 (ADC)
 lCLKBUF_CS = digitalio.DigitalInOut(GP9 )  # (GP9 ) AD9512 (Clock Divider)
 
@@ -45,7 +50,7 @@ MUX_EN.switch_to_output(False, digitalio.DriveMode.PUSH_PULL)
 # meaning that we'll have to manage the locks ourselves.
 SPI0 = busio.SPI(GP2, GP3, GP0)  # SPI 0
 SPI1 = busio.SPI(GP10, GP11, GP8)  # SPI 1
-SPI_SR = bitbangio.SPI(GP14, GP15, None)
+SPI_SR = bitbangio.SPI(GP14, GP15, None) # This should have been on its own interface. The bitbang SPI is much slower.
 
 SPI0.try_lock()
 SPI1.try_lock()
@@ -75,13 +80,12 @@ clock_asm = adafruit_pioasm.assemble(
 ) # Results in a final clock of 12.5 MHz (125 MHz / 5 cycles on / 5 cycles off)
 clock_pio_state_machine = rp2pio.StateMachine(clock_asm, frequency=0, first_set_pin=GP22)
 
-# Run initialialization code for each device
+# Run initialialization code for each device that require it (AD9512 then AD9106es)
 # Default state: AWG mode with all channels disabled
-
-print("Initialization complete, listening to data serial port for commands:\n")
 
 # Main loop
 while False:
+    print("Initialization complete, listening to data serial port for commands:\n")
     # This is crazy insecure, do NOT use this in real production code!
     if usb_cdc.data.in_waiting != 0:
         command = usb_cdc.data.readline() # Make sure that every command ends with a newline "\n"
@@ -93,37 +97,29 @@ while False:
             traceback.print_exception(err)
 
 # DEBUG
+''' (SN74HC595 test)
 # GP6 will be our temporary test pin
 # Clear intermediate register by clocking the shift register during a shift register clear
-# TEST_PIN = digitalio.DigitalInOut(GP6)
-# TEST_PIN.switch_to_input(pull=digitalio.Pull.DOWN)
+TEST_PIN = digitalio.DigitalInOut(GP6)
+TEST_PIN.switch_to_input(pull=digitalio.Pull.DOWN)
 # The SPI transfers are broken up by 8-bit word.
 # The MSB ends up being QH, while the LSB ends up being QA.
-# sn74hc595.sr_update (SPI_SR, lSR_CLR, lSR_OE, 15, 15, 15, 15)
-#
-# outbuffer = bytearray(3)
-# outbuffer[0] = 0x01
-# outbuffer[1] = 0x23
-# outbuffer[2] = 0x40
+sn74hc595.sr_update (SPI_SR, lSR_CLR, lSR_OE, 15, 15, 15, 15)
+'''
+
+''' (AD7680 test)
+outbuffer = bytearray(3)
+outbuffer[0] = 0x01
+outbuffer[1] = 0x23
+outbuffer[2] = 0x40
 # Reconstruct a 16-bit word, stripping the leading and trailing zeroes.
-# outval = ((outbuffer[0] & 0x0F)) << 12 | (outbuffer[1] << 4) | ((outbuffer[2] & 0xF0) >> 4)
-# print(outval)
-#
-# while False:
-    # if TEST_PIN.value:
-        # print ("!!!")
-    # else:
-        # print ("...")
-#
-# TODO
+outval = ((outbuffer[0] & 0x0F)) << 12 | (outbuffer[1] << 4) | ((outbuffer[2] & 0xF0) >> 4)
+print(outval)
+'''
 
-# AD9512
-# Write register initialization for the AD9512
-
-# AD9106
-# Write register initilaization for the AD9106
-# Write wrapper function that implements settings changes to the channels
-# Write low level functions that implement register changes in individual AD9106es
-
-# EIT
-# Write function that implements EIT
+while True:
+    ex_mat_len = int.from_bytes(usb_cdc.data.read(1), "little")
+    print(ex_mat_len)
+    ex_mat_bytes = usb_cdc.data.read(ex_mat_len)
+    print(ex_mat_bytes.hex())
+    usb_cdc.data.reset_input_buffer()
