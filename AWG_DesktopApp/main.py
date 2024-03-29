@@ -87,11 +87,15 @@ def draw_axes(graph_element):
 def make_window(mode,theme=None):
 
     NAME_SIZE = 16
+
+    #font to use
+    interface_font='Courier 10'
+
     # name(name)
     # Creates a pySimpleGUI Text element and populates it with given text
     # takes in a string value to add to the text element
     def name(name):
-        return sg.Text(name + ' ' + ':', size=(NAME_SIZE,1), justification='left',pad=(0,0), font='Courier 10')
+        return sg.Text(name + ' ' + ':', size=(NAME_SIZE,1), justification='left',pad=(0,0), font=interface_font)
 
     sg.theme(theme)
 
@@ -100,12 +104,7 @@ def make_window(mode,theme=None):
     # This is the left side layout that includes the statuses of all the channels
     layout_l = [[ sg.Text('Status',font='Courier 16')],
                 [ sg.HSep()],
-                #[ sg.Text('Channel 1',font='Courier 10')],
                 *[[sg.Col([[sg.Text(f'Channel {i}'),sg.Text('●', size=(1, 1), text_color='red',key=f'-CIRCLE{i}-')]]) ]for i in range(1,channel_count+1)],
-              #  [ sg.Input(s=15)],
-              #  [ sg.Multiline(s=(15,2))],
-               # [ sg.Output(s=(15,2))],
-                #[ sg.Combo(sg.theme_list(), default_value=sg.theme(), s=(15,22), enable_events=True, readonly=True, k='-COMBO-')]
                 ]
 
     #  Right side layout
@@ -119,11 +118,10 @@ def make_window(mode,theme=None):
                        [sg.Button('Use',expand_x=True, enable_events=True, k='-SETPRESET-')],
                        ]
 
-    ## Layout for determining the Input/Output and Mode of the AWG
+    ## Layout for determining the Input/Output and Mode of the AWG 
+    ### Currently unused, may be re-added in the future
     function_layout =[[name('Input/Output:'), sg.Combo(['Output','Input'], default_value='Output', s=(15,22), enable_events=False, readonly=True, k='-FUNCTION-')],
                       [name('Mode:'), sg.Combo(['DAC','ADC'], default_value='Output', s=(15,22), enable_events=False, readonly=True, k='-MODE-')]
-                      #[sg.Push(),sg.Checkbox('EIT Mode')],
-                       #[sg.Button('Set',expand_x=True, enable_events=True, k='-SETPRESET-')],
                        ]
     ## The layout that includes the ON/OFF slider button
     button_layout =[[sg.Slider(range=(0, 1), default_value=0, orientation='h', size=(8, 40), key='-SLIDER-', enable_events=True,tooltip='Toggle On/Off',disable_number_display=True),
@@ -146,11 +144,11 @@ def make_window(mode,theme=None):
                  [sg.Frame("Waveform",frame_layout)]]
     #############################################
     ### EIT Layout ###
-    layout_eit_parameters = [[sg.Push(),sg.Text('Electrodes :',font='Courier 10'), sg.Spin(['0',], s=(15,2), k='-ELECTRODES-')],
-                       [sg.Push(),sg.Text('Distance Between Electrodes (m) :',font='Courier 10'), sg.Spin(['0',], s=(15,2), k='-ELECTRODESD-')],
-                       #[sg.Push(),sg.Text('Amplitude (V) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-AMPLITUDE2-')],
-                       [sg.Push(),sg.Text('Frequency of Injected Current (Hz) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-FREQUENCY2-')],
-                       #[sg.Push(),sg.Text('Voltage Out (V) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-VOLTAGEOUT-')],
+    layout_eit_parameters = [[sg.Push(),sg.Text('Electrodes :',font=interface_font), sg.Spin(['0',], s=(15,2), k='-ELECTRODES-')],
+                       [sg.Push(),sg.Text('Distance Between Electrodes (m) :',font=interface_font), sg.Spin(['0',], s=(15,2), k='-ELECTRODESD-')],
+                       #[sg.Push(),sg.Text('Amplitude (V) :',font=interface_font), sg.Spin(['0',], s=(15,2),k='-AMPLITUDE2-')],
+                       [sg.Push(),sg.Text('Frequency of Injected Current (Hz) :',font=interface_font), sg.Spin(['0',], s=(15,2),k='-FREQUENCY2-')],
+                       #[sg.Push(),sg.Text('Voltage Out (V) :',font=interface_font), sg.Spin(['0',], s=(15,2),k='-VOLTAGEOUT-')],
                        [sg.Button('Submit',expand_x=True, enable_events=True, k='-SUBMITEIT-')]
                        ]
     layout_eit = [
@@ -166,11 +164,9 @@ def make_window(mode,theme=None):
     ###################
 
     ### Window drawing ###
-    layout = [ [sg.Menu([['File', ['Import','Export','Exit']], ['Tools', ['EIT', ]],['Help', ['User Manual', 'Basics']]],  k='-CUST MENUBAR-',p=0)],
-              [sg.Col(layout_l,size=(None,None),expand_x=True, expand_y=True, pad=(0,0), ), sg.VSep(), sg.Col(layout_r,vertical_alignment='top')]]
+    layout = [ [sg.Col(layout_l,size=(None,None),expand_x=True, expand_y=True, pad=(0,0), ), sg.VSep(), sg.Col(layout_r,vertical_alignment='top')]]
 
-    eit_window_layout = [ [sg.Menu([['File', ['Import','Export','Exit']], ['Tools', ['EIT', ]],['Help', ['User Manual', 'Basics']]],  k='-CUST MENUBAR-',p=0)],
-              [ sg.Col(layout_eit,vertical_alignment='top')]]
+    eit_window_layout = [[ sg.Col(layout_eit,vertical_alignment='top')]]
 
 
     main_layout = [
