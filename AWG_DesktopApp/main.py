@@ -84,7 +84,7 @@ def draw_axes(graph_element):
 # make_window()
 # This function draws the window using the layouts 
 # returns the window to be drawn
-def make_window(theme=None):
+def make_window(mode,theme=None):
 
     NAME_SIZE = 16
     # name(name)
@@ -109,9 +109,9 @@ def make_window(theme=None):
                 ]
 
     #  Right side layout
-    parameter_layout =[[name('Frequency(Hz)'), sg.Spin([round(i * 0.1, 1) for i in range(0, 120)],initial_value=0.0, s=(15,2), k='-FREQUENCY-', enable_events=True)],
-                       [name('Amplitude(V)'), sg.Spin([round(i * 0.1, 1) for i in range(-37, 38)],initial_value=0.0, s=(15,2), k='-AMPLITUDE-'),sg.Button('Set',expand_x=True, enable_events=True, k='-SETPARAMS-')],
-                       [name('Phase Shift(°)'), sg.Spin([round(i * 0.1, 1) for i in range(-37, 38)],initial_value=0.0, s=(15,2),k='-PHASE-')],
+    parameter_layout =[[name('Frequency(kHz)'), sg.Spin([round(i * 0.1, 1) for i in range(150, 5000)],initial_value=15.0, s=(15,2), k='-FREQUENCY-', enable_events=True)],
+                       [name('Amplitude(V)'), sg.Spin([round(i * 0.1, 1) for i in range(0, 150)],initial_value=0.0, s=(15,2), k='-AMPLITUDE-'),sg.Button('Set',expand_x=True, enable_events=True, k='-SETPARAMS-')],
+                       [name('Phase Shift(°)'), sg.Spin([round(i * 0.1, 1) for i in range(-3600, 3600)],initial_value=0.0, s=(15,2),k='-PHASE-')],
                        #[name('Offset'), sg.Spin(['0 V',], s=(15,2))]
                        ]
     # Layout that contains the presets for the waves
@@ -148,9 +148,9 @@ def make_window(theme=None):
     ### EIT Layout ###
     layout_eit_parameters = [[sg.Push(),sg.Text('Electrodes :',font='Courier 10'), sg.Spin(['0',], s=(15,2), k='-ELECTRODES-')],
                        [sg.Push(),sg.Text('Distance Between Electrodes (m) :',font='Courier 10'), sg.Spin(['0',], s=(15,2), k='-ELECTRODESD-')],
-                       [sg.Push(),sg.Text('Amplitude (V) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-AMPLITUDE2-')],
+                       #[sg.Push(),sg.Text('Amplitude (V) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-AMPLITUDE2-')],
                        [sg.Push(),sg.Text('Frequency of Injected Current (Hz) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-FREQUENCY2-')],
-                       [sg.Push(),sg.Text('Voltage Out (V) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-VOLTAGEOUT-')],
+                       #[sg.Push(),sg.Text('Voltage Out (V) :',font='Courier 10'), sg.Spin(['0',], s=(15,2),k='-VOLTAGEOUT-')],
                        [sg.Button('Submit',expand_x=True, enable_events=True, k='-SUBMITEIT-')]
                        ]
     layout_eit = [
@@ -281,6 +281,13 @@ def set_preset_wave(wave):
     print(wave+" preset used.")
     send_serial_message("Preset "+wave+" set.\n")
 
+
+
+
+
+
+
+
 # swap_eit_mode(mode)
 # handles swapping From AWG to EIT and vice-versa
 # Sends the Change to the RP2040
@@ -291,13 +298,13 @@ def swap_eit_mode(mode):
     else:
         send_serial_message("Swapped to AWG mode\n")
 
+###### EIT Functions
+
+
 
 # Start of the program...
 
-
-
-
-window = make_window()
+window = make_window("awg")
 
 graph = window['-GRAPH-']  # Accessing the Graph element
 
