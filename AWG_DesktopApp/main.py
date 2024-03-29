@@ -10,9 +10,9 @@ import time
 channel_count = 16
 channel_list = [f"Channel {i}" for i in range(1,channel_count+1)]
 #variables for keeping track of channel parameters and status
-channel_frequencies = [f"{i} Hz" for i in range(1,channel_count+1)]
-channel_amplitude = [f"{i} V" for i in range(1,channel_count+1)]
-channel_phase = [f"{i} °" for i in range(1,channel_count+1)]
+channel_frequencies = [f"{15.0}" for i in range(1,channel_count+1)]
+channel_amplitude = [f"{0.0}" for i in range(1,channel_count+1)]
+channel_phase = [f"{0.0}" for i in range(1,channel_count+1)]
 channel_status= [0 for _ in range(1,channel_count+1)]
 
 graph_size_x=900
@@ -114,7 +114,7 @@ def make_window(mode,theme=None):
                        #[name('Offset'), sg.Spin(['0 V',], s=(15,2))]
                        ]
     # Layout that contains the presets for the waves
-    preset_layout =[[name('Presets'), sg.Combo(['Sine','Square','Triangle'], default_value='Sine', s=(15,22), enable_events=False, readonly=True, k='-PRESET-')],
+    preset_layout =[[name('Preset waves'), sg.Combo(['Sine','Square','Triangle'], default_value='Sine', s=(15,22), enable_events=False, readonly=True, k='-PRESET-')],
                        [sg.Button('Use',expand_x=True, enable_events=True, k='-SETPRESET-')],
                        ]
 
@@ -262,13 +262,39 @@ def change_channel(window):
         window['-SLIDER-'].update(value=1)
         window['-STATE-'].update('On')
 
+#check_params(amplitude, frequency, phase)
+#checks if the parameters are within the expected ranges
+# If the input is invalid, create a popup
+# Returns a boolean: True if the input is valid, False otherwise
+def check_params(amplitude, frequency, phase):
+    message = "ERROR: \n"
+    invalid_input = False
+    if ((amplitude < 0) or (amplitude > 15)):
+        message += "Amplitude input is invalid. Must be between 0 V and 15 V.\n"
+        invalid_input = True
+    if (frequency < 15) or (frequency > 500):
+        message += "Frequency input is invalid. Must be between 15 kHz and 500 kHz.\n"
+        invalid_input = True
+    if (phase < -360) or (phase > 360):
+        message += "Phase input is invalid. Must be between -360° and 360° \n"
+        invalid_input = True
+
+    if invalid_input == True:
+        sg.popup_error(message, title="Error: Invalid Input")
+        return False
+    else:
+        return True
+
+
 # change_params(amplitude, frequency, phase)
 # This handles the modification of the Parameters being sent to the RP2040
+# Calls the check_params function to make sure the input is valid
 # Takes in the amplitude, frequency and phase as floats.
 def change_params(amplitude, frequency, phase):
-    #TODO: Exception checking for parameters
-    print("Parameters sent: ", amplitude,frequency, phase)
-    send_serial_message(str("Params of "+str(amplitude)+","+str(frequency)+","+str(phase)+"\n"))
+    valid_input = check_params(amplitude, frequency, phase)
+    if valid_input == True:
+        print("Parameters sent: ", amplitude,frequency, phase)
+        send_serial_message(str("Params of "+str(amplitude)+","+str(frequency)+","+str(phase)+"\n"))
 
 # set_preset_wave(wave)
 # Function for when a preset wave is set
@@ -346,11 +372,13 @@ while True:
                 frequency_input=window['-FREQUENCY-'].get()
                 phase_input=window['-PHASE-'].get()
 
+
                 amplitude = float(amplitude_input)#.strip(string.ascii_letters).strip()
                 frequency = float(frequency_input)#.strip(string.ascii_letters).strip()
                 phase = float(phase_input)#.strip(string.ascii_letters).strip()
+
             except Exception as e:
-                #TODO: Popup for invalid input
+                sg.popup_error("ERROR: \nInput is not numeric or has invalid characters.", title="Error: Invalid Input")
                 print("Invalid Input:", e)
             finally:
                 try:
