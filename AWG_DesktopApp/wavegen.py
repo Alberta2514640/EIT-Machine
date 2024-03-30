@@ -30,6 +30,8 @@ def gen_graph (freq, phase, type:str):
         # Must be in integer form to transfer to the DDS SRAM
         case "SINE":
             wave = np.sin(theta)
+        case "COSINE":
+            wave = np.cos(theta)
         case "SQUARE":
             wave = sig.square (theta, duty=0.5)
         case "TRIANGLE":
@@ -37,9 +39,9 @@ def gen_graph (freq, phase, type:str):
             # However, to ease the burden of dealing with those registers, we will just generate those waves here in Python,
             # using the same pipeline we are using to generate other arbitrary waves.
             wave = sig.sawtooth (theta, width=0.5)
-        case "SAW_UP":
+        case "SAW UP":
             wave = sig.sawtooth (theta, width=1)
-        case "SAW_DOWN":
+        case "SAW DOWN":
             wave = sig.sawtooth (theta, width=0)
     return time, wave
 

@@ -25,8 +25,8 @@ channel_list = ["Channel " + str(i) for i in range(0,15,1)]
 channel_frequencies = [15.0]*channel_count #In kHz
 channel_amplitude = [1.0]*channel_count
 channel_phase = [0.0]*channel_count
-channel_wavetype = ['SINE']*channel_count
-channel_status= [False]*channel_count
+channel_wavetype = ['Sine']*channel_count
+channel_status = [False]*channel_count
 
 # make_window()
 # This function defines the layouts, then draws the window
@@ -61,7 +61,7 @@ def make_window(mode,theme=None):
                        #[name('Offset'), sg.Spin(['0 V',], s=(15,2))]
                        ]
     # Layout that contains the presets for the waves
-    preset_layout =[[name('Preset waves'), sg.Combo(['Sine','Square','Triangle'], default_value='Sine', s=(15,22), enable_events=False, readonly=True, k='-PRESET-')],
+    preset_layout =[[name('Preset waves'), sg.Combo(['Sine', 'Cosine', 'Square', 'Saw Up', 'Saw Down', 'Triangle'], default_value='Sine', s=(15,22), enable_events=False, readonly=True, k='-PRESET-')],
                        [sg.Button('Use',expand_x=True, enable_events=True, k='-SETPRESET-')],
                        ]
 
@@ -170,7 +170,7 @@ def to_int (str:str):
 def gen_graph_data (ch_n):
     return wavegen.gen_graph(channel_frequencies[ch_n] * 1000, # Converting to kHz
                              channel_phase[ch_n],
-                             "SINE") #get_attrib(channel_wavetype,ch_n) )
+                             channel_wavetype[ch_n]) # "SINE")
 
 def update_graph (ch_n:int, ax:plt.axes, canvas):
     ax.clear()
@@ -189,14 +189,15 @@ def change_channel(window):
     # The current parameters are already saved by the parameter update event. There's no need to do that here.
     #Update the window with the new channel parameters
     channel_disp = values['-CHANNELNUM-'] # Get the updated channel number (Starting at 1)
-    window['-CHANNELTEXT-'].update(channel_disp)
+    # window['-CHANNELTEXT-'].update(channel_disp)
+    global current_channel
     current_channel = to_int(channel_disp)
 
     # Retrieve the values associated with the new channel
-    amplitude_input = float(window['-AMPLITUDE-'].get())
-    frequency_input = float(window['-FREQUENCY-'].get())
-    phase_input     = float(window['-PHASE-'].get())
-    use_preset = values['-PRESET-']
+    amplitude_input = channel_amplitude[current_channel]
+    frequency_input = channel_frequencies [current_channel]
+    phase_input = channel_phase [current_channel]
+    use_preset = channel_wavetype[current_channel]
 
     # Reflect those new values in the GUI
     window['-FREQUENCY-'].update(frequency_input)
@@ -282,7 +283,7 @@ while True:
                 amplitude_input = float(window['-AMPLITUDE-'].get())
                 frequency_input = float(window['-FREQUENCY-'].get())
                 phase_input     = float(window['-PHASE-'].get())
-                use_preset = values['-PRESET-']
+                use_preset      = values['-PRESET-']
             except Exception as e:
                 sg.popup_error("ERROR: \nInput is not numeric or has invalid characters.", title="Error: Invalid Input")
                 print("Invalid Input:", e)
@@ -299,16 +300,17 @@ while True:
 
         # Event for Channel On/Off
         if event == '-SLIDER-':
-            channel_num=window['-CHANNELTEXT-'].get().strip(string.ascii_letters).strip()
             slider_value = values['-SLIDER-']
             #
-            if slider_value == 0:
+            if slider_value == False:
                 window['-STATE-'].update('Off')
-                window[f'-CIRCLE{channel_num}-'].update(text_color='red')
+                window[f'-CIRCLE{current_channel}-'].update(text_color='red')
+                channel_status[current_channel] = False
                 # Send command to turn off channel
             else:
                 window['-STATE-'].update('On')
-                window[f'-CIRCLE{channel_num}-'].update(text_color='green')
+                window[f'-CIRCLE{current_channel}-'].update(text_color='green')
+                channel_status[current_channel] = True
                 # Send command to turn on channel
 
     #TODO: Events for EIT mode
