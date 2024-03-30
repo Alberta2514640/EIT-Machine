@@ -145,27 +145,12 @@ def make_window(mode,theme=None):
 def to_int (str:str):
     return int(str.strip(string.ascii_letters + string.punctuation))
 
-def to_float (str:str):
-    return float(str.strip(string.ascii_letters + string.punctuation))
-
-def get_attrib (array, index):
-    return array[index].strip(string.ascii_letters + string.punctuation)
-
-def get_int (array, index):
-    return int(get_attrib(array, index))
-
-def get_float (array,index):
-    return float(get_attrib(array, index))
-
 def get_bool (array,index):
     string = array[index]
     if string == "On":
         return True
     if string == "Off":
         return False
-
-def to_int (str:str):
-    return int(str.strip(string.ascii_letters))
 
 def gen_graph_data (ch_n):
     return wavegen.gen_graph(channel_frequencies[ch_n] * 1000, # Converting to kHz
