@@ -1,88 +1,35 @@
 import PySimpleGUI as sg
 import math
 import string
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+from   matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 #do pip install pyserial, pyusb and pytime
 import serial.tools.list_ports
 import time
 
+import wavegen
 
 # Global Variables
+mode=0
 channel_count = 16
-channel_list = [f"Channel {i}" for i in range(1,channel_count+1)]
-#variables for keeping track of channel parameters and status
-channel_frequencies = [f"{15.0}" for i in range(1,channel_count+1)]
-channel_amplitude = [f"{0.0}" for i in range(1,channel_count+1)]
-channel_phase = [f"{0.0}" for i in range(1,channel_count+1)]
-channel_status= [0 for _ in range(1,channel_count+1)]
-
+current_channel = 0
 graph_size_x=900
 graph_size_y=375
-
-
-current_channel="Channel 1"
 use_custom_titlebar = False
-mode=0
+channel_list = ["Channel " + str(i) for i in range(0,15,1)]
 
-# send_serial_message(message)
-# Function for sending serial commands
-# takes in a message for sending over serial to the RP2040
-def send_serial_message(message):
-    try:
-        # Serial Connection Communication with the Raspberry
-        # Open serial connection
-        ser = serial.Serial('COM4', 9600)  # Adjust the port as needed
-
-        # Send a message
-        #message = "Hello, Raspberry Pi Pico!\n"
-        ser.write(message.encode())
-
-        timeout_seconds = 5  # Set timeout to 5 seconds
-        start_time = time.time()  # Get current time
-        while True:
-            if time.time() - start_time > timeout_seconds:
-                print("Timeout: No response from Raspberry Pi.")
-                break  # Exit loop if timeout is reached
-            data = ser.readline().decode().strip()
-            if data:
-                print("GUI Received:", data)
-                break
-    except serial.SerialException as e:
-        print("Serial communication error:", e)
-    except Exception as e:
-        print("An error occurred:", e)
-    finally:
-        try:
-            ser.close()  # Close the serial connection
-        except NameError:
-            pass  # ser variable might not be defined if an exception occurred before opening the connection
-
-# draw_axes(graph_element)
-# Function for drawing the axes in the Graph element of the GUI
-# Takes in the Graph, to apply the changes
-def draw_axes(graph_element):
-    # Define the graph size
-    graph_size = (graph_size_x, graph_size_y)
-
-    # Define the time and voltage ranges
-    time_range_ms = 10
-    voltage_range_volts = 1.7
-
-    # Draw X-axis with time in milliseconds
-    graph_element.draw_line((20, graph_size[1] // 2), (graph_size[0], graph_size[1] // 2), color='black')
-    graph_element.draw_text('0 ms', (20, 10), color='black')
-    # create a loop to display time multiple times
-    graph_element.draw_text(f'{time_range_ms} ms', (graph_size[0] - 30, 10), color='black')
-    graph_element.draw_line((20, graph_size[1]-20), (graph_size[0], graph_size[1] -20), color='black')
-    graph_element.draw_line((20, 40), (graph_size[0], 40), color='black')
-
-    # Draw Y-axis with voltage in Volts
-    graph_element.draw_line((20, 0), (20, graph_size[1]), color='black')
-    graph_element.draw_text('0V', (10, graph_size[1] // 2), color='black')
-    graph_element.draw_text(f'{voltage_range_volts}V', (10, graph_size[1] - 20), color='black')
-    graph_element.draw_text(f'-{voltage_range_volts}V', (10, 40), color='black')
+# Variables for keeping track of channel parameters and status
+# Initialize to default values
+channel_frequencies = [15.0]*channel_count #In kHz
+channel_amplitude = [1.0]*channel_count
+channel_phase = [0.0]*channel_count
+channel_wavetype = ['SINE']*channel_count
+channel_status= [False]*channel_count
 
 # make_window()
-# This function draws the window using the layouts 
+# This function defines the layouts, then draws the window
 # returns the window to be drawn
 def make_window(mode,theme=None):
 
@@ -104,12 +51,12 @@ def make_window(mode,theme=None):
     # This is the left side layout that includes the statuses of all the channels
     layout_l = [[ sg.Text('Status',font='Courier 16')],
                 [ sg.HSep()],
-                *[[sg.Col([[sg.Text(f'Channel {i}'),sg.Text('●', size=(1, 1), text_color='red',key=f'-CIRCLE{i}-')]]) ]for i in range(1,channel_count+1)],
+                *[[sg.Col([[sg.Text(f'Channel {i}'),sg.Text('●', size=(1, 1), text_color='red',key=f'-CIRCLE{i}-')]]) ]for i in range(0,channel_count)],
                 ]
 
     #  Right side layout
     parameter_layout =[[name('Frequency(kHz)'), sg.Spin([round(i * 0.1, 1) for i in range(150, 5000)],initial_value=15.0, s=(15,2), k='-FREQUENCY-', enable_events=True)],
-                       [name('Amplitude(V)'), sg.Spin([round(i * 0.1, 1) for i in range(0, 150)],initial_value=0.0, s=(15,2), k='-AMPLITUDE-'),sg.Button('Set',expand_x=True, enable_events=True, k='-SETPARAMS-')],
+                       [name('Amplitude(V)'), sg.Spin([round(i * 0.1, 1) for i in range(0, 150)],initial_value=1.0, s=(15,2), k='-AMPLITUDE-'),sg.Button('Set',expand_x=True, enable_events=True, k='-SETPARAMS-')],
                        [name('Phase Shift(°)'), sg.Spin([round(i * 0.1, 1) for i in range(-3600, 3600)],initial_value=0.0, s=(15,2),k='-PHASE-')],
                        #[name('Offset'), sg.Spin(['0 V',], s=(15,2))]
                        ]
@@ -118,7 +65,7 @@ def make_window(mode,theme=None):
                        [sg.Button('Use',expand_x=True, enable_events=True, k='-SETPRESET-')],
                        ]
 
-    ## Layout for determining the Input/Output and Mode of the AWG 
+    ## Layout for determining the Input/Output and Mode of the AWG
     ### Currently unused, may be re-added in the future
     function_layout =[[name('Input/Output:'), sg.Combo(['Output','Input'], default_value='Output', s=(15,22), enable_events=False, readonly=True, k='-FUNCTION-')],
                       [name('Mode:'), sg.Combo(['DAC','ADC'], default_value='Output', s=(15,22), enable_events=False, readonly=True, k='-MODE-')]
@@ -131,7 +78,8 @@ def make_window(mode,theme=None):
                 ]
 
     ## This is the layout for the parameter and channel control; Includes Parameter layout, preset layout and On/Off layout
-    frame_layout = [[sg.Graph((graph_size_x+80, graph_size_y+20), (0,20), (graph_size_x,graph_size_y),background_color='white', k='-GRAPH-')],
+    # frame_layout = [[sg.Graph((graph_size_x+80, graph_size_y+20), (0,20), (graph_size_x,graph_size_y),background_color='white', k='-GRAPH-')],
+    frame_layout = [[sg.Canvas(size=(graph_size_x+80, graph_size_y+20), k='-AWG-GRAPH-')],
                     [
                        sg.Column([[sg.Frame("Parameters",parameter_layout)]]),
                        sg.Column([[sg.Frame("Presets",preset_layout)]]),
@@ -140,7 +88,7 @@ def make_window(mode,theme=None):
                     ]
                  ]
     ## Layout for the right side of the Interface; Includes the Graph, Channel name and all the parameter controls
-    layout_r  = [[sg.Text(current_channel, k='-CHANNELTEXT-'),sg.Push(),sg.Combo(channel_list, default_value=current_channel, size=(15,22), enable_events=True, readonly=True, k='-CHANNELNUM-',)],
+    layout_r  = [[sg.Text("Channel " + str(current_channel), k='-CHANNELTEXT-'),sg.Push(),sg.Combo(channel_list, default_value="Channel " + str(current_channel), size=(15,22), enable_events=True, readonly=True, k='-CHANNELNUM-',)],
                  [sg.Frame("Waveform",frame_layout)]]
     #############################################
     ### EIT Layout ###
@@ -156,7 +104,8 @@ def make_window(mode,theme=None):
                         sg.Column([
                             [sg.Text('Electrical Impedance Tomography (EIT)',font='Courier 16')],
                             [sg.Column([[sg.Frame("Parameters",layout_eit_parameters)]])],
-                            [sg.Frame("",[[sg.Graph((450,450),(0,450),(450,0),background_color='white',border_width=1)]])]
+                            [sg.Canvas(size=(450,450), k='-EIT-GRAPH-')]
+                            # [sg.Frame("",[[sg.Graph((450,450),(0,450),(450,0),background_color='white',border_width=1)]])]
                         ],element_justification='center')
                     ]
                   ]
@@ -193,39 +142,43 @@ def make_window(mode,theme=None):
 
     return window
 
+def to_int (str:str):
+    return int(str.strip(string.ascii_letters + string.punctuation))
 
+def to_float (str:str):
+    return float(str.strip(string.ascii_letters + string.punctuation))
 
-# draw_sine_wave(graph_element)
-# Function for drawing a preset sine wave in the Graph element of the GUI
-# Takes in the Graph, to apply the changes
-# TODO: take in parameters to change the sine wave
-def draw_sine_wave(graph_element):
-    graph_size = (graph_size_x, graph_size_y)
+def get_attrib (array, index):
+    return array[index].strip(string.ascii_letters + string.punctuation)
 
-    amplitude = graph_size[1] // 3
-    frequency = 0.02
-    step = 5  # Adjust the step size for the number of line segments
+def get_int (array, index):
+    return int(get_attrib(array, index))
 
-    points = []
-    for x in range(0, graph_size[0], step):
-        y = amplitude * math.sin(frequency * x)
-        points.append((x+20, graph_size[1] // 2 - y))
+def get_float (array,index):
+    return float(get_attrib(array, index))
 
-    # Draw the sine wave using line segments
-    for i in range(len(points) - 1):
-        graph_element.draw_line(points[i], points[i + 1], color='blue')
+def get_bool (array,index):
+    string = array[index]
+    if string == "On":
+        return True
+    if string == "Off":
+        return False
 
-# draw_graph(graph_element,preset)
-# Function for drawing in the graph element of the GUI
-# Takes in the graph element to be modified, and the preset wave as a string to draw
-def draw_graph(graph_element,preset):
-    if preset == 'Sine':
-        draw_sine_wave(graph_element)
-    elif preset == 'Square':
-        graph_element.draw_line((10, 10), (100, 100))  # Example line drawn in the graph
-    #graph_element.draw_line((10, 10), (100, 100))  # Example line drawn in the graph
+def to_int (str:str):
+    return int(str.strip(string.ascii_letters))
 
+def gen_graph_data (ch_n):
+    return wavegen.gen_graph(channel_frequencies[ch_n] * 1000, # Converting to kHz
+                             channel_phase[ch_n],
+                             "SINE") #get_attrib(channel_wavetype,ch_n) )
 
+def update_graph (ch_n:int, ax:plt.axes, canvas):
+    ax.clear()
+    x, y = gen_graph_data (ch_n)
+    ax.plot(x,y)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
+    pass
 
 # change_channel(window)
 # This function handles all events for when a channel is changes
@@ -233,34 +186,32 @@ def draw_graph(graph_element,preset):
 # and then retrieving the parameters for the channel that was switched to.
 # takes in the window to access the elements
 def change_channel(window):
-    #Save the current parameters
-    prev_channel=window['-CHANNELTEXT-'].get()
-    prev_num= int(prev_channel.strip(string.ascii_letters))
-    channel_frequencies[prev_num-1]=window['-FREQUENCY-'].get()
-    channel_amplitude[prev_num-1]=window['-AMPLITUDE-'].get()
-    channel_phase[prev_num-1]=window['-PHASE-'].get()
-    slider_value = values['-SLIDER-']
-    if slider_value == 0:
-        channel_status[prev_num-1]=0
-    else:
-        channel_status[prev_num-1]=1
-
-    # Send message to Raspberry Pi Pico
-    send_serial_message("Hello, Raspberry Pi Pico!\n")
+    # The current parameters are already saved by the parameter update event. There's no need to do that here.
     #Update the window with the new channel parameters
-    current_channel = values['-CHANNELNUM-']
-    window['-CHANNELTEXT-'].update(str(current_channel))
-    channel_num=int(current_channel.strip(string.ascii_letters))
+    channel_disp = values['-CHANNELNUM-'] # Get the updated channel number (Starting at 1)
+    window['-CHANNELTEXT-'].update(channel_disp)
+    current_channel = to_int(channel_disp)
 
-    window['-FREQUENCY-'].update(str(channel_frequencies[channel_num-1]))
-    window['-AMPLITUDE-'].update(str(channel_amplitude[channel_num-1]))
-    window['-PHASE-'].update(str(channel_phase[channel_num-1]))
-    if channel_status[channel_num-1] == 0:
+    # Retrieve the values associated with the new channel
+    amplitude_input = float(window['-AMPLITUDE-'].get())
+    frequency_input = float(window['-FREQUENCY-'].get())
+    phase_input     = float(window['-PHASE-'].get())
+    use_preset = values['-PRESET-']
+
+    # Reflect those new values in the GUI
+    window['-FREQUENCY-'].update(frequency_input)
+    window['-AMPLITUDE-'].update(amplitude_input)
+    window['-PHASE-'].update(phase_input)
+    window['-PRESET-'].update(use_preset)
+
+    if channel_status[current_channel] == False:
         window['-SLIDER-'].update(value=0)
         window['-STATE-'].update('Off')
     else:
         window['-SLIDER-'].update(value=1)
         window['-STATE-'].update('On')
+
+    update_graph(current_channel, ax_awg, awg_canvas_agg)
 
 #check_params(amplitude, frequency, phase)
 #checks if the parameters are within the expected ranges
@@ -285,7 +236,6 @@ def check_params(amplitude, frequency, phase):
     else:
         return True
 
-
 # change_params(amplitude, frequency, phase)
 # This handles the modification of the Parameters being sent to the RP2040
 # Calls the check_params function to make sure the input is valid
@@ -294,105 +244,80 @@ def change_params(amplitude, frequency, phase):
     valid_input = check_params(amplitude, frequency, phase)
     if valid_input == True:
         print("Parameters sent: ", amplitude,frequency, phase)
-        send_serial_message(str("Params of "+str(amplitude)+","+str(frequency)+","+str(phase)+"\n"))
-
-# set_preset_wave(wave)
-# Function for when a preset wave is set
-# Takes in the wave to be sent to the RP2040
-def set_preset_wave(wave):
-    print(wave+" preset used.")
-    send_serial_message("Preset "+wave+" set.\n")
-
-
-
-
-
-
-
-
-# swap_eit_mode(mode)
-# handles swapping From AWG to EIT and vice-versa
-# Sends the Change to the RP2040
-def swap_eit_mode(mode):
-    print("Mode swapped!")
-    if mode == 0:
-        send_serial_message("Swapped to EIT mode\n")
-    else:
-        send_serial_message("Swapped to AWG mode\n")
+        # send_serial_message(str("Params of "+str(amplitude)+","+str(frequency)+","+str(phase)+"\n"))
 
 ###### EIT Functions
 
-
+# TODO: EIT functions
 
 # Start of the program...
 
 window = make_window("awg")
 
-graph = window['-GRAPH-']  # Accessing the Graph element
+# Create new graph based on the current data on the channel
 
-if graph:  # Checking if the Graph element is present
-    draw_axes(graph)
+# Attach new graph to the AWG-GRAPH and EIT-GRAPH keys.
+fig_awg, ax_awg = plt.subplots()
+fig_awg.set_dpi(100)
+fig_awg.set_size_inches(9, 3.75)
+awg_canvas_agg = FigureCanvasTkAgg(fig_awg, window['-AWG-GRAPH-'].TKCanvas)
+update_graph(current_channel, ax_awg, awg_canvas_agg)
+# window['-EIT-GRAPH-']
 
-
+# Main event loop
 while True:
     event, values = window.read()
     if event == sg.WIN_CLOSED or event == 'Exit':
         break
     # Events for when mode is in AWG Mode
     if mode == 0:
-        # Event for setting a Preset Wave
-        if event == '-SETPRESET-':
-            use_preset = values['-PRESET-']
-            draw_graph(window['-GRAPH-'],use_preset)
-            set_preset_wave(use_preset)
         # Event for Changing Channel
-        if event == '-CHANNELNUM-':
+        if (event == '-CHANNELNUM-'):
             change_channel(window)
-            window['-GRAPH-'].erase()
-            graph = window['-GRAPH-']
-            draw_axes(graph)
-            #TODO: call an update function in the future for the graph
+            update_graph(current_channel, ax_awg, awg_canvas_agg)
 
-        # Event for Channel On/Off
-        if event == '-SLIDER-':
-            channel_num=window['-CHANNELTEXT-'].get().strip(string.ascii_letters).strip()
-            slider_value = values['-SLIDER-']
-            # 
-            if slider_value == 0:
-                window['-STATE-'].update('Off')
-                window[f'-CIRCLE{channel_num}-'].update(text_color='red')
-            else:
-                window['-STATE-'].update('On')
-                window[f'-CIRCLE{channel_num}-'].update(text_color='green')
-
-        # Event for setting parameters
-        if event == '-SETPARAMS-':
+        # Event for setting a Preset Wave or changing wave parameters
+        if (event == '-SETPRESET-') | (event == '-SETPARAMS-'):
             try:
-                amplitude_input=window['-AMPLITUDE-'].get()
-                frequency_input=window['-FREQUENCY-'].get()
-                phase_input=window['-PHASE-'].get()
-
-
-                amplitude = float(amplitude_input)#.strip(string.ascii_letters).strip()
-                frequency = float(frequency_input)#.strip(string.ascii_letters).strip()
-                phase = float(phase_input)#.strip(string.ascii_letters).strip()
-
+                amplitude_input = float(window['-AMPLITUDE-'].get())
+                frequency_input = float(window['-FREQUENCY-'].get())
+                phase_input     = float(window['-PHASE-'].get())
+                use_preset = values['-PRESET-']
             except Exception as e:
                 sg.popup_error("ERROR: \nInput is not numeric or has invalid characters.", title="Error: Invalid Input")
                 print("Invalid Input:", e)
             finally:
                 try:
-                    change_params(amplitude,frequency,phase)
+                    channel_amplitude[current_channel] = amplitude_input
+                    channel_frequencies [current_channel] = frequency_input
+                    channel_phase [current_channel] = phase_input
+                    channel_wavetype[current_channel] = use_preset
+                    update_graph(current_channel, ax_awg, awg_canvas_agg)
+                    valid_input = check_params(amplitude_input, frequency_input, phase_input)
                 except NameError:
-                    pass # parameters were not set
+                    pass # parameters were not set'''
+
+        # Event for Channel On/Off
+        if event == '-SLIDER-':
+            channel_num=window['-CHANNELTEXT-'].get().strip(string.ascii_letters).strip()
+            slider_value = values['-SLIDER-']
+            #
+            if slider_value == 0:
+                window['-STATE-'].update('Off')
+                window[f'-CIRCLE{channel_num}-'].update(text_color='red')
+                # Send command to turn off channel
+            else:
+                window['-STATE-'].update('On')
+                window[f'-CIRCLE{channel_num}-'].update(text_color='green')
+                # Send command to turn on channel
 
     #TODO: Events for EIT mode
-             
+
     # Swap to EIT Mode
     if event == 'EIT':
         window['-AWG-'].update(visible=False)
         window['-EIT-'].update(visible=True)
-        swap_eit_mode(mode)
+        # swap_eit_mode(mode)
         mode=1
         menu_def_eit = [['File', ['Import', 'Export', 'Exit']],
                                 ['Tools', ['EIT ✓']],
@@ -403,13 +328,12 @@ while True:
     if event == 'EIT ✓':
         window['-EIT-'].update(visible=False)
         window['-AWG-'].update(visible=True)
-        swap_eit_mode(mode)
+        # swap_eit_mode(mode)
 
         mode=0
         menu_def = [['File', ['Import', 'Export', 'Exit']],
                                 ['Tools', ['EIT']],
                                 ['Help', ['User Manual', 'Basics']]]
         window['-CUST MENUBAR-'].update(menu_definition=menu_def)
-
 
 window.close()
