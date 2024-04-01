@@ -4,11 +4,10 @@ import digitalio
 
 # Startup procedure
 def init(trigger:digitalio.DigitalInOut, dds1_cs:digitalio.DigitalInOut, dds2_cs:digitalio.DigitalInOut, dds3_cs:digitalio.DigitalInOut, dds4_cs:digitalio.DigitalInOut):
-    for cs in dds1_cs: #, dds2_cs, dds3_cs, dds4_cs: # Skip these since they're not populated on the prototype board
+    for cs in dds1_cs, dds2_cs, dds3_cs, dds4_cs:
         # Raise trigger line to stop any pattern generation.
         # Set initialized non-default settings
-        # Update SPI
-        #
+        # Update SPI registers
         pass
     pass
 
