@@ -12,7 +12,7 @@ from board import *
 
 import user_spi
 
-# Reverses the order of the bits in an eight bit number. This is because the SPI sends MSB-first, but the shift register is wired LSB-first.
+# Reverses the order of the bits in a 16-bit number. This is because the SPI sends MSB-first, but the shift register is wired LSB-first.
 def bit_swap (input:int):
     swapped = ((input & 0b00000001) << 7) | ((input & 0b00000010) << 5) | ((input & 0b00000100) << 3) | ((input & 0b00001000) << 1) | ((input & 0b00010000) >> 1) | ((input & 0b00100000) >> 3) | ((input & 0b01000000) >> 5) | ((input & 0b10000000) >> 7)
     return swapped
@@ -37,7 +37,9 @@ def sr_write (spi:bitbangio.SPI, lCLR:digitalio.DigitalInOut, lOE:digitalio.Digi
     clk.deinit ()
     spi = bitbangio.SPI(GP14, GP15, None)
     spi.try_lock()
-    spi.configure(baudrate=9600, polarity=0, phase=0, bits=9) # NOTE! Some baud rates here cause the Pico to enter an unrecoverable state!
+    # NOTE! Some baud rates here cause the Pico to enter an unrecoverable state!
+    # Originally tested with 9600 baud.
+    spi.configure(baudrate=115200, polarity=0, phase=0, bits=9)
     spi.unlock()
 
     # Re-enable output
