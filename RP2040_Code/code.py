@@ -13,12 +13,9 @@ from board import *
 
 # User drivers
 # import awg
-import eit
 import ad9512
 import ad9106
-import ad7680
-import sn74hc595
-import user_spi
+from user_serial import *
 
 # Serial port helper functions
 
@@ -57,10 +54,10 @@ SPI1.try_lock()
 SPI_SR.try_lock()
 
 # All of our SPI devices fortunately use SPI mode 0.
-SPI0.configure(baudrate=7812500, polarity=0, phase=0, bits=8)  # Highest supported baud rate on this port
-SPI1.configure(baudrate=7812500, polarity=0, phase=0, bits=8)
-SPI_SR.configure(baudrate=9600, polarity=0, phase=0, bits=9) # NOTE! Some baud rates here cause the Pico to enter an unrecoverable state!
-                                                             # We need a 9th bit here because we must cycle the device one extra time.
+SPI0.configure(  baudrate=7812500, polarity=0, phase=0, bits=8)  # Highest supported baud rate on this port
+SPI1.configure(  baudrate=7812500, polarity=0, phase=0, bits=8)
+SPI_SR.configure(baudrate=115200 , polarity=0, phase=0, bits=9) # NOTE! Some baud rates here cause the Pico to enter an unrecoverable state!
+                                                                # We need a 9th bit here because we must cycle the device one extra time.
 SPI0.unlock()
 SPI1.unlock()
 SPI_SR.unlock()
@@ -81,11 +78,19 @@ clock_asm = adafruit_pioasm.assemble(
 clock_pio_state_machine = rp2pio.StateMachine(clock_asm, frequency=0, first_set_pin=GP22)
 
 # Run initialialization code for each device that require it (AD9512 then AD9106es)
-# Default state: AWG mode with all channels disabled
+ad9512.init(lCLKBUF_CS)
+ad9106.init(lDDS_SYNC, lDDS1_CS, lDDS2_CS, lDDS3_CS, lDDS4_CS)
 
 # Main loop
-while False:
-    print("Initialization complete, listening to data serial port for commands:\n")
+# Listen for commands issued from the host computer
+# EIT mode
+# Change AWG setting
+# Software reset (After software reset, execute init functions again)
+print("Initialization complete, listening to data serial port for commands:\n")
+usb_cdc.data.flush()
+usb_cdc.data.reset_input_buffer()
+usb_cdc.data.reset_output_buffer()
+while True:
     # This is crazy insecure, do NOT use this in real production code!
     if usb_cdc.data.in_waiting != 0:
         command = usb_cdc.data.readline() # Make sure that every command ends with a newline "\n"
@@ -93,6 +98,7 @@ while False:
         usb_cdc.data.flush()
         try:
             exec(command)
+            usb_cdc.data.flush()
         except Exception as err:
             traceback.print_exception(err)
 
@@ -118,8 +124,10 @@ print(outval)
 '''
 
 while True:
+    ''' (EIT Bulk serial send test)
     ex_mat_len = int.from_bytes(usb_cdc.data.read(1), "little")
     print(ex_mat_len)
     ex_mat_bytes = usb_cdc.data.read(ex_mat_len)
     print(ex_mat_bytes.hex())
     usb_cdc.data.reset_input_buffer()
+    '''

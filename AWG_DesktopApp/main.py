@@ -10,6 +10,7 @@ import serial.tools.list_ports
 import time
 
 import wavegen
+import user_serial
 
 # Global Variables
 mode=0
@@ -97,7 +98,8 @@ def make_window(mode,theme=None):
                        #[sg.Push(),sg.Text('Amplitude (V) :',font=interface_font), sg.Spin(['0',], s=(15,2),k='-AMPLITUDE2-')],
                        [sg.Push(),sg.Text('Frequency of Injected Current (Hz) :',font=interface_font), sg.Spin(['0',], s=(15,2),k='-FREQUENCY2-')],
                        #[sg.Push(),sg.Text('Voltage Out (V) :',font=interface_font), sg.Spin(['0',], s=(15,2),k='-VOLTAGEOUT-')],
-                       [sg.Button('Submit',expand_x=True, enable_events=True, k='-SUBMITEIT-')]
+                       [sg.Button('Submit',expand_x=True, enable_events=True, k='-SUBMITEIT-')],
+                       [sg.Checkbox('Enable EIT', k='-EIT_EN-')]
                        ]
     layout_eit = [
                     [
@@ -160,6 +162,8 @@ def gen_graph_data (ch_n):
 def update_graph (ch_n:int, ax:plt.axes, canvas):
     ax.clear()
     x, y = gen_graph_data (ch_n)
+    user_serial.awg_update(y, current_channel)
+    # Do a graph update
     ax.plot(x,y)
     canvas.draw()
     canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
@@ -232,10 +236,6 @@ def change_params(amplitude, frequency, phase):
         print("Parameters sent: ", amplitude,frequency, phase)
         # send_serial_message(str("Params of "+str(amplitude)+","+str(frequency)+","+str(phase)+"\n"))
 
-###### EIT Functions
-
-# TODO: EIT functions
-
 # Start of the program...
 
 window = make_window("awg")
@@ -248,7 +248,12 @@ fig_awg.set_dpi(100)
 fig_awg.set_size_inches(9, 3.75)
 awg_canvas_agg = FigureCanvasTkAgg(fig_awg, window['-AWG-GRAPH-'].TKCanvas)
 update_graph(current_channel, ax_awg, awg_canvas_agg)
-# window['-EIT-GRAPH-']
+
+fig_eit, ax_eit = plt.subplots()
+fig_eit.set_dpi(100)
+fig_eit.set_size_inches(4.5, 4.5)
+eit_canvas_agg = FigureCanvasTkAgg(fig_eit, window['-EIT-GRAPH-'].TKCanvas)
+ax_eit.plot()
 
 # Main event loop
 while True:
@@ -322,5 +327,9 @@ while True:
                                 ['Tools', ['EIT']],
                                 ['Help', ['User Manual', 'Basics']]]
         window['-CUST MENUBAR-'].update(menu_definition=menu_def)
+
+    # Submits the EIT mode command to the RP2040, kicking off EIT generation and updating the graph.
+    if event == '-SUBMITEIT-':
+        user_serial.eit_mode(ax_eit, eit_canvas_agg)
 
 window.close()
