@@ -44,31 +44,3 @@ def gen_graph (freq, phase, type:str):
         case "SAW DOWN":
             wave = sig.sawtooth (theta, width=0)
     return time, wave
-
-# Wrapper that handles generating the wave based on the given WaveType enum.
-# Handles sending the wave to the device over the given COM port.
-# Returns a fig, ax pair that can be used to plot the generated waveform through matplotlib integration in PySimpleGUI.
-def generate_and_send(amplitude, frequency, phase, channel:int, type:str, ser_port:ser.Serial):
-    time, data = gen_graph (frequency, phase, type)
-    # Put the data into an array of bytes
-    # Set the limit to max and then round.
-    bit_depth = 12
-    max = (np.power(2, bit_depth-1) - 1) # Maximum value based on bit depth (n-bit signed int)
-    data *= max
-    data = np.rint(data)
-    data = data.astype(np.int16)
-    print (data)
-    data_bytes = bytearray(0)
-    for i in range (0, 1024):
-        data_bytes.append(data[i] & 0x00FF)
-        data_bytes.append((data[i] & 0xFF00) >> 8)
-    return time, data
-
-
-# Function that sends formatted SRAM data to the device over the COM port.
-# The device on the other end is responsible for chopping off the top 4 MSBs.
-def send_ser(amplitude, channel, data:bytearray, ser_port:ser.Serial):
-    # Send instruction to start listening for bulk SRAM data transfer intended for a certain channel
-    # Perform the bulk transfer
-    # Wait for a certain amount of time for the device to acknowledge receipt
-    pass
