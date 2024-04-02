@@ -137,7 +137,7 @@ def make_window(mode,theme=None):
             )
         ]
     ]
-    window_size= (1080,600)
+    window_size= (1080,700)
 
     window = sg.Window('16 Channel Arbitrary Waveform Generator', main_layout, finalize=True,  keep_on_top=False, use_custom_titlebar=use_custom_titlebar, size= window_size)
 
