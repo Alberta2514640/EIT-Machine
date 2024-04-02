@@ -1,9 +1,15 @@
 # User Serial Wrapper
 # Handles for functions that are triggered from SPI devices
 
-import random
 import time
+import random
+import busio
+import digitalio
+import bitbangio
 import usb_cdc
+
+import ad7680
+import sn74hc595
 
 def update_awg (data_len):
     data = usb_cdc.data.read(data_len)
@@ -27,7 +33,8 @@ def update_awg (data_len):
 # This was the result of a design oversight.
 # Start to generate 50 kHz sine on HDR1 and prompt user to flip EIT switch.
     # This will be handled by the host computer, so we don't have to worry about it here.
-def start_eit():
+def start_eit(adc_spi:busio.SPI, adc_cs:digitalio.DigitalInOut,
+              sr_spi:bitbangio.SPI, sr_oe:digitalio.DigitalInOut, sr_clr:digitalio.DigitalInOut):
     # global lEIT_PD, lAMP_PD
     # Configures the amps and DDSes for EIT mode.
     # lEIT_PD.value = True
@@ -37,14 +44,35 @@ def start_eit():
     # We need to read 2x the number of excitations because they come in pairs
     ext =   usb_cdc.data.read(int.from_bytes(ext_n, 'little') * 2)
     mea = usb_cdc.data.read(int.from_bytes(mea_n, 'little') * 2)
-    # print (ext_n)
-    # print (ext)
-    # print (mea_n)
-    # print (mea)
-    for i in range (0, 416):
-        rand_byte = bytearray(1)
-        rand_byte[0] = random.randint(0,255)
-        usb_cdc.data.write(rand_byte)
+    print (len(ext))
+    print (ext)
+    print (len(mea))
+    print (mea)
+    # Iterate over the excitations
+    for i in range (0, 32, 2): # 16 excitation pairs
+        # 0 is source, 1 is sink
+        ext_src = ext[i]
+        ext_snk = ext[i+1]
+        print ("Excite node", ext_src, ext_snk)
+        for j in range (0, 26, 2): # 13 measurement pairs per excitation
+            # 0 is positive, 1 is negative
+            mes_pos = mea[j+(i+13)]
+            mes_neg = mea[j+(i+13)+1]
+            print ("Measure node", mes_pos, mes_neg)
+            # Adjust the shift register to point to the right place!
+            # sn74hc595.sr_update(sr_spi, sr_clr, sr_oe, ext_src, ext_snk, mes_pos, mes_neg)
+            outval = ad7680.single_conv(adc_spi, adc_cs)
+            # print (outval)
+            out_bytes = outval.to_bytes(2, 'little') # Might wanna keep an eye on this, don't know if it'll end up being big instead
+            # print (out_bytes)
+            usb_cdc.data.write(out_bytes)
+            pass
+            # Iterate over the measurements the correspond to t
+    for i in range (0, 416): # Send random bytes
+        # rand_byte = bytearray(1)
+        # rand_byte[0] = random.randint(0,255)
+        # usb_cdc.data.write(rand_byte)
+        pass
         # time.sleep(0.01)
     # Parses the list of pairs for generation and measurement.
     # ^ This comes from the pyEIT protocol object. Alternatively, we can just hardcode them here.
