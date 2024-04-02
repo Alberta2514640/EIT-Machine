@@ -34,19 +34,12 @@ def sr_write (spi:bitbangio.SPI, lCLR:digitalio.DigitalInOut, lOE:digitalio.Digi
     lCLR.value = True
 
     user_spi.write(spi, None, len(inputbuffer), inputbuffer=inputbuffer)
-    # Extra clock cycle
-    # spi.deinit()
-    # clk = digitalio.DigitalInOut(GP14)
-    # clk.switch_to_output(False, drive_mode=digitalio.DriveMode.PUSH_PULL)
-    # clk.value = True
-    # clk.deinit ()
-    # spi = bitbangio.SPI(GP14, GP15, None)
-    # spi.try_lock()
-    # # NOTE! Some baud rates here cause the Pico to enter an unrecoverable state!
-    # # Originally tested with 9600 baud.
-    # spi.configure(baudrate=921600, polarity=0, phase=0, bits=9)
-    # print ("SPI reinitialized")
-    # spi.unlock()
+    # BAD IDEA: Instead of deiniting the SPI and reusing G14 as a extra clock cycle, here's a very janky way of doing it:
+    # Use one of the unused CS pins as an "extra clock", weakly pulled up by the RP2040.
+    # When required, cycle it on and off.
+    test = digitalio.DigitalInOut(GP17)
+    test.switch_to_output(value=True, drive_mode=digitalio.Pull.UP)
+    test.deinit()
 
     # Re-enable output
     lOE.value = False
