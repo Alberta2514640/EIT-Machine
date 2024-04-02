@@ -5,6 +5,10 @@
 # Unfortunately, the hardware design fails to account for the SPI being MSB First in CircuitPython.
 # This means that we will have to convert our numbers, since writing 5 - 0101, will actually end up writing A - 1010.
 
+# This ended up being far too complicated to make sense.
+# TODO: In future revisions, use another RP2040 instead of shift registers to handle switching.
+# This setup, at present, takes about 22 seconds to 208 whole EIT readings.
+
 import time
 import digitalio
 import bitbangio
@@ -30,22 +34,26 @@ def sr_write (spi:bitbangio.SPI, lCLR:digitalio.DigitalInOut, lOE:digitalio.Digi
     lCLR.value = True
 
     user_spi.write(spi, None, len(inputbuffer), inputbuffer=inputbuffer)
-    spi.deinit()
-    clk = digitalio.DigitalInOut(GP14)
-    clk.switch_to_output(False, drive_mode=digitalio.DriveMode.PUSH_PULL)
-    clk.value = True
-    clk.deinit ()
-    spi = bitbangio.SPI(GP14, GP15, None)
-    spi.try_lock()
-    # NOTE! Some baud rates here cause the Pico to enter an unrecoverable state!
-    # Originally tested with 9600 baud.
-    spi.configure(baudrate=115200, polarity=0, phase=0, bits=9)
-    spi.unlock()
+    # Extra clock cycle
+    # spi.deinit()
+    # clk = digitalio.DigitalInOut(GP14)
+    # clk.switch_to_output(False, drive_mode=digitalio.DriveMode.PUSH_PULL)
+    # clk.value = True
+    # clk.deinit ()
+    # spi = bitbangio.SPI(GP14, GP15, None)
+    # spi.try_lock()
+    # # NOTE! Some baud rates here cause the Pico to enter an unrecoverable state!
+    # # Originally tested with 9600 baud.
+    # spi.configure(baudrate=921600, polarity=0, phase=0, bits=9)
+    # print ("SPI reinitialized")
+    # spi.unlock()
 
     # Re-enable output
     lOE.value = False
 
 # Wraps a whole shift register update cycle
+# The SPI transfers are broken up by 8-bit word.
+# The MSB ends up being QH, while the LSB ends up being QA.
 def sr_update (spi:bitbangio.SPI, lCLR:digitalio.DigitalInOut, lOE:digitalio.DigitalInOut, source:int, sink:int, in_p:int, in_n:int):
 
     # Determine the register values based on what is given in the argument
