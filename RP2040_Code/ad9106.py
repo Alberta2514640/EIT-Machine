@@ -1,15 +1,54 @@
 # Functions for interacting with Analog Devices AD9106 direct digital synthesis (DDS) ICs, that implement the AWG mode of the 16CH_EIT.
 
 import digitalio
+import busio
+
+def reg_write (spi:busio.SPI, cs:digitalio.DigitalInOut, command:bytearray, input:bytearray):
+    cs.value = False
+    spi.write(command)
+    spi.write(input)
+    cs.value = True
 
 # Startup procedure
-def init(trigger:digitalio.DigitalInOut, dds1_cs:digitalio.DigitalInOut, dds2_cs:digitalio.DigitalInOut, dds3_cs:digitalio.DigitalInOut, dds4_cs:digitalio.DigitalInOut):
-    for cs in dds1_cs, dds2_cs, dds3_cs, dds4_cs:
-        # Raise trigger line to stop any pattern generation.
-        # Set initialized non-default settings
-        # Update SPI registers
-        pass
+def init(spi:busio.SPI, trigger:digitalio.DigitalInOut, dds4_cs:digitalio.DigitalInOut):
+    # Raise trigger line to stop any pattern generation.
+    trigger.value = True
+    spi.try_lock()
+    # 0x26 WAV4,3 Config: Write 0x3131 (DDS Output)
+    command = bytearray([0x00, 0x26])
+    inputbuffer = bytearray([0x31, 0x31])
+    reg_write(spi, dds4_cs, command, inputbuffer)
+
+    # 0x3E: Tuning Word MSB: Write 0x0083
+    command = bytearray([0x00, 0x3E])
+    inputbuffer = bytearray([0x00, 0x83])
+    reg_write(spi, dds4_cs, command, inputbuffer)
+
+    # 0x3F: Tuning Word LSB: Write 0x1200
+    command = bytearray([0x00, 0x3F])
+    inputbuffer = bytearray([0x12, 0x00])
+    reg_write(spi, dds4_cs, command, inputbuffer)
+
+    # 0x1E Pattern Status: Set run bit: Write 0x01
+    command = bytearray([0x00, 0x1E])
+    inputbuffer = bytearray([0x00, 0x01])
+    reg_write(spi, dds4_cs, command, inputbuffer)
+
+    # 0x1D Update registers: Set update bit 0: Write 0x01
+    command = bytearray([0x00, 0x1D])
+    inputbuffer = bytearray([0x00, 0x01])
+    reg_write(spi, dds4_cs, command, inputbuffer)
+
+    spi.unlock()
+    trigger.value = False
     pass
+
+# We ran out of time to implement the SRAM arbitrary waveform stuff, but that's ok.
+# We're able to output a 50 kHz sine from the DDS using a tuning word.
+# From the datasheet, the output frequency = fclk / 2^24 * 24-bit tuning word.
+# For 50 kHz, that means that our tuning word should be 33,554, or 0x008312.
+# The tuning word is stored in 0x3E (MSB) and 0x3D (LSB), left-justified.
+# This means that we can essentially just write 0x0083 1200.
 
 # Serial control format:
 # All SPI transactions on the AD9106 are preceded by a 16-bit control word.
@@ -70,7 +109,7 @@ def init(trigger:digitalio.DigitalInOut, dds1_cs:digitalio.DigitalInOut, dds2_cs
 # 0x40 - 0x43 DDSx Phase Offset
 # 0x44 Pattern Control 1 (TRIG_TW_SEL)
 # 0x45 Pattern Control 2 (DDSx_CONFIG)
-# 0x47 TW_RAM_CONFIG (Tuning Word)
+# 0x47 TW_RAM_CONFIG (Tuning Word) # DDS Frequency
 
 # 0x50 START DELAY 4
 # 0x51 START ADDRESS 4
