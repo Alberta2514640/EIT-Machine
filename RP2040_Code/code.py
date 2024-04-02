@@ -15,9 +15,11 @@ from board import *
 # import awg
 import ad9512
 import ad9106
-from user_serial import *
+import user_serial
 
-# Serial port helper functions
+# To whoever is reading this in the future:
+# This code is a mess, hobbled together last minute for capstone.
+# Thank you for your understanding (*_ _)人
 
 # Initialization code:
 
@@ -30,17 +32,18 @@ lEIT_PD   = digitalio.DigitalInOut(GP19)  # (GP19) ~EIT PD (PD for channel 1)
 MUX_EN    = digitalio.DigitalInOut(GP20)  # (GP20) MUX EN
 
 # SPI chip selects
-lDDS1_CS   = digitalio.DigitalInOut(GP1 )  # (GP1 ) AD9106 #1 (DDS 1)
-lDDS2_CS   = digitalio.DigitalInOut(GP5 )  # (GP5 ) AD9106 #2 (DDS 2) (Not populated on prototype board)
-lDDS3_CS   = digitalio.DigitalInOut(GP17)  # (GP17) AD9106 #3 (DDS 3) (Not populated on prototype board)
-lDDS4_CS   = digitalio.DigitalInOut(GP21)  # (GP21) AD9106 #4 (DDS 4) (Not populated on prototype board)
+# lDDS1_CS   = digitalio.DigitalInOut(GP1 )  # (GP1 ) AD9106 #1 (DDS 1) (Not populated on prototype board)
+# lDDS2_CS   = digitalio.DigitalInOut(GP5 )  # (GP5 ) AD9106 #2 (DDS 2) (Not populated on prototype board)
+# lDDS3_CS   = digitalio.DigitalInOut(GP17)  # (GP17) AD9106 #3 (DDS 3) (Not populated on prototype board)
+lDDS4_CS   = digitalio.DigitalInOut(GP21)  # (GP21) AD9106 #4 (DDS 4)
 lADC_CS    = digitalio.DigitalInOut(GP25)  # (GP25) AD7680 (ADC)
 lCLKBUF_CS = digitalio.DigitalInOut(GP9 )  # (GP9 ) AD9512 (Clock Divider)
 
-for pin in [ lSR_CLR, lSR_OE, lDDS_SYNC, lAMP_PD, lEIT_PD,
-            lDDS1_CS, lDDS2_CS, lDDS3_CS, lDDS4_CS, lADC_CS, lCLKBUF_CS]:
+for pin in [ lSR_CLR, lSR_OE, lDDS_SYNC, lAMP_PD,
+             lEIT_PD, lDDS4_CS, lADC_CS, lCLKBUF_CS]:
     pin.switch_to_output(True, digitalio.DriveMode.PUSH_PULL)
-MUX_EN.switch_to_output(False, digitalio.DriveMode.PUSH_PULL)
+for pin in [ MUX_EN]:
+    pin.switch_to_output(False, digitalio.DriveMode.PUSH_PULL)
 
 # Set up SPI interfaces (SCLK, MOSI, MISO)
 # The CircuitPython SPIDevice library doesn't seem to work yet,
@@ -54,9 +57,9 @@ SPI1.try_lock()
 SPI_SR.try_lock()
 
 # All of our SPI devices fortunately use SPI mode 0.
-SPI0.configure(  baudrate=7812500, polarity=0, phase=0, bits=8)  # Highest supported baud rate on this port
+SPI0.configure(  baudrate=7812500, polarity=0, phase=0, bits=8)
 SPI1.configure(  baudrate=7812500, polarity=0, phase=0, bits=8)
-SPI_SR.configure(baudrate=115200 , polarity=0, phase=0, bits=9) # NOTE! Some baud rates here cause the Pico to enter an unrecoverable state!
+SPI_SR.configure(baudrate=921600 , polarity=0, phase=0, bits=9) # NOTE! Some baud rates here cause the Pico to enter an unrecoverable state!
                                                                 # We need a 9th bit here because we must cycle the device one extra time.
 SPI0.unlock()
 SPI1.unlock()
@@ -77,30 +80,84 @@ clock_asm = adafruit_pioasm.assemble(
 ) # Results in a final clock of 12.5 MHz (125 MHz / 5 cycles on / 5 cycles off)
 clock_pio_state_machine = rp2pio.StateMachine(clock_asm, frequency=0, first_set_pin=GP22)
 
+# Serial port helper functions
+
+def start_eit():
+    user_serial.start_eit(SPI0, lADC_CS, SPI_SR, lSR_OE, lSR_CLR)
+    pass
+    # API hook for calling the EIT function
+
+def update_awg(len):
+    user_serial.update_awg(len)
+
 # Run initialialization code for each device that require it (AD9512 then AD9106es)
-ad9512.init(lCLKBUF_CS)
-ad9106.init(lDDS_SYNC, lDDS1_CS, lDDS2_CS, lDDS3_CS, lDDS4_CS)
+ad9512.init(lCLKBUF_CS) # For now, it's okay for the CLKBUF to be left at default values.
+ad9106.init(SPI0, lDDS_SYNC, lDDS4_CS)
 
 # Main loop
 # Listen for commands issued from the host computer
 # EIT mode
 # Change AWG setting
 # Software reset (After software reset, execute init functions again)
-print("Initialization complete, listening to data serial port for commands:\n")
-usb_cdc.data.flush()
-usb_cdc.data.reset_input_buffer()
-usb_cdc.data.reset_output_buffer()
+
+lADC_CS.value = False
+SPI0.try_lock()
+outputbuffer = bytearray(3)
+SPI0.readinto(outputbuffer)
+for i in outputbuffer:
+    print (i)
+SPI0.unlock()
+lADC_CS.value = True
+
+lDDS4_CS.value = False
+SPI0.try_lock()
+# Check tuning word MSB
+inputbuffer = bytearray([0x80, 0x3E])
+SPI0.write(inputbuffer)
+outputbuffer = bytearray(2)
+SPI0.readinto(outputbuffer)
+print (outputbuffer)
+lDDS4_CS.value = True
+lDDS4_CS.value = False
+# Check tuning word LSB
+inputbuffer = bytearray([0x80, 0x3F])
+SPI0.write(inputbuffer)
+outputbuffer = bytearray(2)
+SPI0.readinto(outputbuffer)
+print (outputbuffer)
+lDDS4_CS.value = True
+SPI0.unlock()
+
+lCLKBUF_CS.value = False
+inputbuffer = bytearray([0x80, 0x00])
+SPI1.try_lock()
+SPI1.write(inputbuffer)
+outputbuffer = bytearray(1)
+SPI1.readinto(outputbuffer)
+print (outputbuffer)
+SPI1.unlock()
+lCLKBUF_CS.value = True
+
 while True:
+    print("Initialization complete, listening to data serial port for commands:\n")
     # This is crazy insecure, do NOT use this in real production code!
-    if usb_cdc.data.in_waiting != 0:
-        command = usb_cdc.data.readline() # Make sure that every command ends with a newline "\n"
-        print("(DEBUG) Command received: (", command, "). Executing.")
+    while usb_cdc.data.in_waiting == 0:
+        continue
+    command = usb_cdc.data.readline() # Make sure that every command ends with a newline "\n"
+    usb_cdc.data.flush()
+    usb_cdc.data.reset_input_buffer()
+    usb_cdc.data.reset_output_buffer()
+    ack = bytearray([0x00])
+    usb_cdc.data.write(ack)
+    print("(DEBUG) Command received: (", command, "). Executing.")
+    print("(DEBUG) Command size:", len(command))
+    try:
+        exec(command)
         usb_cdc.data.flush()
-        try:
-            exec(command)
-            usb_cdc.data.flush()
-        except Exception as err:
-            traceback.print_exception(err)
+        usb_cdc.data.reset_input_buffer()
+        usb_cdc.data.reset_output_buffer()
+    except Exception as err:
+        traceback.print_exception(err)
 
 # DEBUG
 ''' (SN74HC595 test)
@@ -131,3 +188,4 @@ while True:
     print(ex_mat_bytes.hex())
     usb_cdc.data.reset_input_buffer()
     '''
+
