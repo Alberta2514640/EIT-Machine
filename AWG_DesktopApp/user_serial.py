@@ -57,12 +57,15 @@ def eit_mode(ax, canvas):
             # ^ Not implemented here due to time constraints
         # main.py will be responsible for restoring the EIT channel's configuration at the end of EIT mode
     # The RP2040 will start listening for the excitation and measurement pairs
-    ser = serial.Serial('COM6')
+    ser = serial.Serial('COM8')
     ser.reset_input_buffer()
     ser.flush()
     sending = str.encode('start_eit()\n')
     ser.write(sending)
+    ser.read(1) # Wait for the ack
     # Send the list of excitation pairs, then the list of measurement pairs
+    # print (prot_obj.ex_mat)
+    # print (prot_obj.meas_mat)
     ser.write(prot_obj.n_exc.to_bytes())
     ser.write(prot_obj.n_meas_tot.to_bytes())
     ser.write(int8_ext_bytes)
@@ -82,7 +85,7 @@ def eit_mode(ax, canvas):
         meas_conv = meas_arr.astype(dtype=np.float64) * (3.3 / pow(2, 16))
         # print (meas_vals, len(meas_vals))
         # print (meas_arr, len(meas_arr))
-        # print (meas_conv, len(meas_conv))
+        print (meas_conv, len(meas_conv))
         vi = meas_conv
         ds_sim = pyeit_obj.solve(vi, vo, False, False)
         solution = np.real(ds_sim)
@@ -94,7 +97,7 @@ def eit_mode(ax, canvas):
         canvas.draw()
         canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
         vo = vi
-        break
+        break # Due to time constraints, I think we can only really figure out how to do this once.
         # Update the vi value, calculate and plot the new version of the EIT.
 
     pass
@@ -111,14 +114,20 @@ def awg_update(data:np.array, ch_n):
     data = np.rint(data)
     data = data.astype(np.int16)
     # Set up the serial port
-    ser = serial.Serial('COM6', stopbits=1)
-    ser.reset_input_buffer()
+    ser = serial.Serial('COM8', stopbits=1)
     ser.flush()
+    ser.reset_output_buffer()
+    ser.reset_input_buffer()
     # Send the kick-off command
     sending = str.encode('update_awg (' + str(len(data) * 2) + ')\n')
     ser.write(sending)
+    print("Sending", len(sending), "bytes")
     # Send the data which matches the amount of bytes to transfer
-    ser.write(data)
+    ser.read(1) # Wait for the transfer to be acked
+    print("Sending", len(data.tobytes()), "bytes")
+    ser.write(data.tobytes())
+    ser.flush()
+    ser.reset_output_buffer()
     ser.close()
     # TODO: Calculate and send a tuning gain to the RP2040 to implement amplitude scaling
     pass
